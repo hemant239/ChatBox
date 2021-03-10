@@ -1,0 +1,281 @@
+package com.hemant239.chatbox;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.Toast;
+
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import com.hemant239.chatbox.chat.ChatAdapter;
+import com.hemant239.chatbox.chat.ChatObject;
+
+import java.util.ArrayList;
+import java.util.Objects;
+
+public class AllChatsActivity extends AppCompatActivity {
+
+
+    private static RecyclerView.Adapter<ChatAdapter.ViewHolder> mChatListAdapter;
+    RecyclerView mChatList;
+    RecyclerView.LayoutManager mChatListLayoutManager;
+
+    ArrayList<ChatObject> chatList;
+
+    ImageView imageView;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_all_chats);
+
+
+        chatList=new ArrayList<>();
+
+
+        initializeViews();
+        requestUserPermission();
+        initializeRecyclerViews();
+
+
+        getChatList();
+
+
+    }
+    final int CHANGE_PROFILE_PHOTO_CODE=1;
+    private void openGallery() {
+        Intent intent=new Intent();
+        intent.setType("image/*");
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE,false);
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent,"Select an image"),CHANGE_PROFILE_PHOTO_CODE);
+    }
+
+
+
+    public static RecyclerView.Adapter<ChatAdapter.ViewHolder> getChatAdapter(){
+        return mChatListAdapter;
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(resultCode==RESULT_OK){
+            switch (requestCode){
+                case CHANGE_PROFILE_PHOTO_CODE:
+                    String userId= Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+                    final StorageReference profileStorage= FirebaseStorage.getInstance().getReference().child("ProfilePhotos").child(userId);
+                    final DatabaseReference mUserDb=FirebaseDatabase.getInstance().getReference().child("Users").child(userId);
+
+                    assert data != null;
+                    final UploadTask uploadTask=profileStorage.putFile(Objects.requireNonNull(data.getData()));
+                    uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            profileStorage.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                @Override
+                                public void onSuccess(Uri uri) {
+                                    mUserDb.child("Profile Image Uri").setValue(uri.toString());
+                                }
+                            });
+
+                        }
+                    });
+
+                    break;
+
+                default:
+                    Toast.makeText(getApplicationContext(),"something went wrong, please try again later",Toast.LENGTH_SHORT).show();
+
+            }
+
+        }
+    }
+
+    private void getChatList() {
+
+        FirebaseUser mUser=FirebaseAuth.getInstance().getCurrentUser();
+        DatabaseReference mUserDB= FirebaseDatabase.getInstance().getReference().child("Users");
+
+        if(mUser!=null){
+            mUserDB=mUserDB.child(mUser.getUid()).child("chat");
+            mUserDB.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if(snapshot.exists()){
+                        for(DataSnapshot childSnapshot:snapshot.getChildren()){
+                            if(childSnapshot.getKey()!=null){
+                                getChatDetails(childSnapshot.getKey());
+
+                            }
+                        }
+                    }
+
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Toast.makeText(getApplicationContext(),"something went wrong, please try again later",Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+
+    }
+
+    private void getChatDetails(final String key) {
+        final DatabaseReference mChatDB=FirebaseDatabase.getInstance().getReference().child("Chats").child(key).child("info");
+
+        mChatDB.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
+                    String name="";
+                    String imageUri="";
+
+                    if(snapshot.child("Name").getValue()!=null){
+                        name=snapshot.child("Name").getValue().toString();
+                    }
+                    if(snapshot.child("Chat Profile Image Uri").getValue()!=null){
+                        imageUri=snapshot.child("Chat Profile Image Uri").getValue().toString();
+                    }
+
+                    ChatObject chatObject=new ChatObject(key,name,imageUri);
+                    chatList.add(chatObject);
+                    mChatListAdapter.notifyDataSetChanged();
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(getApplicationContext(),"something went wrong, please try again later",Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
+
+
+    }
+
+    private void initializeRecyclerViews() {
+
+        mChatList=findViewById(R.id.recyclerViewListChats);
+        mChatList.setHasFixedSize(false);
+        mChatList.setNestedScrollingEnabled(false);
+
+        mChatList.addItemDecoration(new DividerItemDecoration(mChatList.getContext(),DividerItemDecoration.VERTICAL));
+
+
+
+        mChatListAdapter= new ChatAdapter(chatList,this,imageView,mChatList);
+        mChatList.setAdapter(mChatListAdapter);
+
+        mChatListLayoutManager=new LinearLayoutManager(getApplicationContext(),RecyclerView.VERTICAL,false);
+        mChatList.setLayoutManager(mChatListLayoutManager);
+    }
+
+    private void requestUserPermission() {
+        String[] permissions={Manifest.permission.INTERNET,Manifest.permission.READ_CONTACTS,Manifest.permission.ACCESS_NETWORK_STATE};
+        requestPermissions(permissions,1);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if(requestCode==1){
+            if(grantResults[1]== PackageManager.PERMISSION_DENIED){
+                Toast.makeText(getApplicationContext(),"you didn't give the permission to access the contacts, So Fuck Off",Toast.LENGTH_LONG).show();
+                finish();
+            }
+        }
+    }
+
+    private void createNewChat() {
+        Intent intent=new Intent(this,CreateNewChatActivity.class);
+        startActivity(intent);
+    }
+
+    private void logOut() {
+        FirebaseAuth.getInstance().signOut();
+
+        Intent intent=new Intent(this,LogInActivity.class);
+        startActivity(intent);
+        finish();
+
+    }
+
+
+    private void initializeViews() {
+        imageView=findViewById(R.id.bigImage);
+    }
+
+
+    @Override
+    public void onBackPressed() {
+        if(imageView.getVisibility()!=View.GONE){
+            imageView.setVisibility(View.GONE);
+            mChatList.setVisibility(View.VISIBLE);
+        }
+        else
+            super.onBackPressed();
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.all_chats_menu,menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+
+        switch (item.getItemId()){
+            case R.id.logoutMenu:
+                logOut();
+                break;
+
+            case R.id.createNewChatMenu:
+                createNewChat();
+                break;
+
+
+            case R.id.changeProfilePictureMenu:
+                openGallery();
+                break;
+
+
+            default:
+                Toast.makeText(getApplicationContext(),"sahi sahi select kar, zyaada dimaag mat chala",Toast.LENGTH_SHORT).show();
+                break;
+
+        }
+        return true;
+    }
+
+
+}

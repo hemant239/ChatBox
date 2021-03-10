@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/parentRelativeLayout"
+        android:layout_margin="10dp"
+        android:paddingLeft="10dp"
+        android:background="@drawable/custom_background_message_sender"
+        >
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sender ID"
+            android:id="@+id/messageSender"
+            android:padding="5dp"
+            android:textColor="#0720FA"
+            android:textSize="20dp"
+            android:textDirection="ltr"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"/>
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Message asdhknwonwodjondadowjodndoijowndojowjdjdojodjojdwoijdoejdoej"
+            android:id="@+id/messageText"
+            android:padding="5dp"
+            android:textColor="#0F0F10"
+            android:fontFamily="sans-serif-medium"
+            android:textDirection="ltr"
+            android:layout_below="@id/messageSender"
+            android:maxWidth="250dp"/>
+
+
+        <ImageView
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:src="@mipmap/ic_launcher"
+            android:layout_below="@id/messageText"
+            android:id="@+id/mediaImage"
+            android:visibility="gone"
+            />
+
+    </RelativeLayout>
+</RelativeLayout>
