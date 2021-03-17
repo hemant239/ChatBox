@@ -82,7 +82,7 @@ public class LogInActivity extends AppCompatActivity {
 
             @Override
             public void onVerificationFailed(@NonNull FirebaseException e) {
-                Toast.makeText(getApplicationContext(),"something went wrong, please try again later",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(),"On verification Failed",Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -122,7 +122,7 @@ public class LogInActivity extends AppCompatActivity {
                             }
                             @Override
                             public void onCancelled(@NonNull DatabaseError error) {
-                                Toast.makeText(getApplicationContext(),"something went wrong, please try again later",Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(),"On Cancelled",Toast.LENGTH_SHORT).show();
                             }
                         });
                     }

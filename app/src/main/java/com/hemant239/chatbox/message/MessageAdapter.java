@@ -1,6 +1,7 @@
 package com.hemant239.chatbox.message;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.hemant239.chatbox.ImageViewActivity;
 import com.hemant239.chatbox.R;
 
 import java.util.ArrayList;
@@ -49,7 +51,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
     }
 
     @Override
-    public void onBindViewHolder(@NonNull MessageAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull MessageAdapter.ViewHolder holder, final int position) {
 
         RelativeLayout.LayoutParams layoutParams= new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         layoutParams.addRule(RelativeLayout.ALIGN_PARENT_END);
@@ -59,6 +61,14 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         holder.messageSender.setText(messageList.get(position).getSenderName());
         if(!messageList.get(position).getImageUri().equals("")) {
             holder.mediaImage.setVisibility(View.VISIBLE);
+            holder.mediaImage.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent =new Intent(context, ImageViewActivity.class);
+                    intent.putExtra("URI",messageList.get(position).getImageUri());
+                    context.startActivity(intent);
+                }
+            });
             Glide.with(context).load(Uri.parse(messageList.get(position).getImageUri())).into(holder.mediaImage);
         }
         if(messageList.get(position).getSenderId().equals(userKey)){

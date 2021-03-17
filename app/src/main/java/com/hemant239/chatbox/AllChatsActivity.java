@@ -44,7 +44,6 @@ public class AllChatsActivity extends AppCompatActivity {
 
     ArrayList<ChatObject> chatList;
 
-    ImageView imageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +78,9 @@ public class AllChatsActivity extends AppCompatActivity {
         return mChatListAdapter;
     }
 
+    DatabaseReference mUserDB, mChatDB;
+    ValueEventListener valueEventListenerUserDB,valueEventListenerChatDB;
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -108,7 +110,7 @@ public class AllChatsActivity extends AppCompatActivity {
                     break;
 
                 default:
-                    Toast.makeText(getApplicationContext(),"something went wrong, please try again later",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),"something went wrong, please try again later onActivity result",Toast.LENGTH_SHORT).show();
 
             }
 
@@ -118,11 +120,11 @@ public class AllChatsActivity extends AppCompatActivity {
     private void getChatList() {
 
         FirebaseUser mUser=FirebaseAuth.getInstance().getCurrentUser();
-        DatabaseReference mUserDB= FirebaseDatabase.getInstance().getReference().child("Users");
+        mUserDB= FirebaseDatabase.getInstance().getReference().child("Users");
 
         if(mUser!=null){
             mUserDB=mUserDB.child(mUser.getUid()).child("chat");
-            mUserDB.addValueEventListener(new ValueEventListener() {
+            valueEventListenerUserDB=mUserDB.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     if(snapshot.exists()){
@@ -138,7 +140,7 @@ public class AllChatsActivity extends AppCompatActivity {
 
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
-                    Toast.makeText(getApplicationContext(),"something went wrong, please try again later",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),"something went wrong, please try again later get chatList",Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -147,9 +149,9 @@ public class AllChatsActivity extends AppCompatActivity {
     }
 
     private void getChatDetails(final String key) {
-        final DatabaseReference mChatDB=FirebaseDatabase.getInstance().getReference().child("Chats").child(key).child("info");
+        mChatDB=FirebaseDatabase.getInstance().getReference().child("Chats").child(key).child("info");
 
-        mChatDB.addValueEventListener(new ValueEventListener() {
+        valueEventListenerChatDB= mChatDB.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
@@ -172,7 +174,7 @@ public class AllChatsActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(getApplicationContext(),"something went wrong, please try again later",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(),"something went wrong, please try again later get chat details",Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -191,7 +193,7 @@ public class AllChatsActivity extends AppCompatActivity {
 
 
 
-        mChatListAdapter= new ChatAdapter(chatList,this,imageView,mChatList);
+        mChatListAdapter= new ChatAdapter(chatList,this);
         mChatList.setAdapter(mChatListAdapter);
 
         mChatListLayoutManager=new LinearLayoutManager(getApplicationContext(),RecyclerView.VERTICAL,false);
@@ -220,7 +222,12 @@ public class AllChatsActivity extends AppCompatActivity {
     }
 
     private void logOut() {
+
+
+        mUserDB.removeEventListener(valueEventListenerUserDB);
+        mChatDB.removeEventListener(valueEventListenerChatDB);
         FirebaseAuth.getInstance().signOut();
+
 
         Intent intent=new Intent(this,LogInActivity.class);
         startActivity(intent);
@@ -230,19 +237,6 @@ public class AllChatsActivity extends AppCompatActivity {
 
 
     private void initializeViews() {
-        imageView=findViewById(R.id.bigImage);
-    }
-
-
-    @Override
-    public void onBackPressed() {
-        if(imageView.getVisibility()!=View.GONE){
-            imageView.setVisibility(View.GONE);
-            mChatList.setVisibility(View.VISIBLE);
-        }
-        else
-            super.onBackPressed();
-
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.hemant239.chatbox;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -14,8 +15,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -40,8 +44,10 @@ public class SpecificChatActivity extends AppCompatActivity {
     
     EditText mMessageText;
     Button mSendMessage,
-            mChangeChatPhotoButton,
             mAddMedia;
+
+    TextView chatName;
+    ImageView chatPhoto;
 
     RecyclerView mMessageList;
     RecyclerView.Adapter<MessageAdapter.ViewHolder> mMessageAdapter;
@@ -64,6 +70,38 @@ public class SpecificChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_specific_chat);
 
+        Objects.requireNonNull(getSupportActionBar()).setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+        getSupportActionBar().setDisplayShowCustomEnabled(true);
+        getSupportActionBar().setCustomView(R.layout.app_bar_specific_chat);
+        View view=getSupportActionBar().getCustomView();
+
+        chatName=view.findViewById(R.id.chatAppName);
+        chatPhoto=view.findViewById(R.id.chatAppProfileImage);
+
+        chatPhoto.setClipToOutline(true);
+
+        String name=getIntent().getStringExtra("Chat Name");
+        final String imageUri=(getIntent().getStringExtra("Image Uri"));
+
+        chatName.setText(name);
+        Glide.with(getApplicationContext()).load(Uri.parse(imageUri)).into(chatPhoto);
+
+
+        chatPhoto.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Intent intent =new Intent(getApplicationContext(), ImageViewActivity.class);
+                intent.putExtra("URI",imageUri);
+                startActivity(intent);
+
+            }
+        });
+
+
+
+
+
         
         initializeViews();
         messageList=new ArrayList<>();
@@ -79,13 +117,6 @@ public class SpecificChatActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 sendMessage(key);
-            }
-        });
-
-        mChangeChatPhotoButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                openGalleryToChangeProfilePhoto();
             }
         });
 
@@ -291,7 +322,7 @@ public class SpecificChatActivity extends AppCompatActivity {
 
 
 
-        mMessageAdapter= new MessageAdapter(messageList,getApplicationContext());
+        mMessageAdapter= new MessageAdapter(messageList,this);
         mMessageList.setAdapter(mMessageAdapter);
 
         mMessageListLayoutManager=new LinearLayoutManager(getApplicationContext(),RecyclerView.VERTICAL,false);
@@ -302,7 +333,6 @@ public class SpecificChatActivity extends AppCompatActivity {
         
         mMessageText=findViewById(R.id.messageText);
         mSendMessage=findViewById(R.id.sendMessage);
-        mChangeChatPhotoButton=findViewById(R.id.changeChatPhoto);
         mAddMedia=findViewById(R.id.addMedia);
     }
 
@@ -323,7 +353,7 @@ public class SpecificChatActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
-            case R.id.changeChatPhoto:
+            case R.id.changeProfilePictureMenu:
                 openGalleryToChangeProfilePhoto();
                 break;
 

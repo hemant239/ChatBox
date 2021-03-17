@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.hemant239.chatbox.AllChatsActivity;
+import com.hemant239.chatbox.ImageViewActivity;
 import com.hemant239.chatbox.R;
 import com.hemant239.chatbox.SpecificChatActivity;
 
@@ -31,16 +32,12 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
     ArrayList<ChatObject> mChatList;
     Context context;
 
-    ImageView imageView;
-    RecyclerView recyclerView;
 
     RecyclerView.Adapter<ChatAdapter.ViewHolder> tempChatAdapter;
 
-    public ChatAdapter(ArrayList<ChatObject> chatList, AllChatsActivity allChatsActivity,ImageView imageView,RecyclerView recyclerView){
+    public ChatAdapter(ArrayList<ChatObject> chatList, AllChatsActivity allChatsActivity){
         mChatList=chatList;
         context=allChatsActivity;
-        this.imageView=imageView;
-        this.recyclerView=recyclerView;
         tempChatAdapter=this;
     }
 
@@ -65,9 +62,9 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
             holder.mChatImage.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Glide.with(context).load(Uri.parse(mChatList.get(position).getImageUri())).into(imageView);
-                    recyclerView.setVisibility(View.GONE);
-                    imageView.setVisibility(View.VISIBLE);
+                    Intent intent =new Intent(context, ImageViewActivity.class);
+                    intent.putExtra("URI",mChatList.get(position).getImageUri());
+                    context.startActivity(intent);
                 }
             });
             Glide.with(context).load(Uri.parse(mChatList.get(position).getImageUri())).into(holder.mChatImage);
@@ -81,6 +78,8 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
 
                 //intent.putExtra("Chat Adapter", (Parcelable) ChatAdapter.this);
                 intent.putExtra("Chat Key",mChatList.get(position).getUid());
+                intent.putExtra("Chat Name",mChatList.get(position).getName());
+                intent.putExtra("Image Uri",mChatList.get(position).getImageUri());
                 context.startActivity(intent);
             }
         });

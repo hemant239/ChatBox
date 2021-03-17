@@ -150,7 +150,7 @@ public class CreateNewChatActivity extends AppCompatActivity {
 
 
 
-            if(phoneNumber!=null && name!=null){
+            if(name != null){
                 UserObject contactUser=new UserObject(name,phoneNumber);
                 checkUserDetails(contactUser);
                 
@@ -212,7 +212,7 @@ public class CreateNewChatActivity extends AppCompatActivity {
 
 
 
-        mUserListAdapter= new UserAdapter(userList,getApplicationContext());
+        mUserListAdapter= new UserAdapter(userList,this);
         mUserList.setAdapter(mUserListAdapter);
 
         mUserListLayoutManager=new LinearLayoutManager(getApplicationContext(),RecyclerView.VERTICAL,false);

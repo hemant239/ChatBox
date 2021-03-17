@@ -1,6 +1,7 @@
 package com.hemant239.chatbox.user;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.hemant239.chatbox.ImageViewActivity;
 import com.hemant239.chatbox.R;
 
 import java.util.ArrayList;
@@ -52,6 +54,15 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         holder.mPhoneNumber.setText(mUserList.get(position).getPhoneNumber());
 
         if(!mUserList.get(position).getProfileImageUri().equals("")){
+            holder.mProfilePhoto.setClipToOutline(true);
+            holder.mProfilePhoto.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent =new Intent(context, ImageViewActivity.class);
+                    intent.putExtra("URI",mUserList.get(position).getProfileImageUri());
+                    context.startActivity(intent);
+                }
+            });
             Glide.with(context).load(Uri.parse(mUserList.get(position).getProfileImageUri())).into(holder.mProfilePhoto);
         }
 
