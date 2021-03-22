@@ -64,6 +64,8 @@ public class SpecificChatActivity extends AppCompatActivity {
 
     String mediaAdded;
 
+    int numberOfUsers;
+
     boolean isImageChanged;
 
 
@@ -84,6 +86,8 @@ public class SpecificChatActivity extends AppCompatActivity {
 
         String name=getIntent().getStringExtra("Chat Name");
         final String imageUri=(getIntent().getStringExtra("Image Uri"));
+        numberOfUsers=getIntent().getIntExtra("Number Of Users",0);
+
 
         chatName.setText(name);
         Glide.with(getApplicationContext()).load(Uri.parse(imageUri)).into(chatPhoto);
@@ -333,7 +337,7 @@ public class SpecificChatActivity extends AppCompatActivity {
 
 
 
-        mMessageAdapter= new MessageAdapter(messageList,this);
+        mMessageAdapter= new MessageAdapter(messageList,this,numberOfUsers);
         mMessageList.setAdapter(mMessageAdapter);
 
         mMessageListLayoutManager=new LinearLayoutManager(getApplicationContext(),RecyclerView.VERTICAL,false);

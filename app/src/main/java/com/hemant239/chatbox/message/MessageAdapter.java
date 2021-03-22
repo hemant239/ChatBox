@@ -28,12 +28,20 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
     ArrayList<MessageObject> messageList;
 
     String userKey;
+    int numberOfUsers;
 
     Context context;
 
     public MessageAdapter(ArrayList<MessageObject> messageList, Context context){
         this.messageList=messageList;
         this.context=context;
+        userKey= Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+    }
+
+    public MessageAdapter(ArrayList<MessageObject> messageList, Context context, int numberOfUsers){
+        this.messageList=messageList;
+        this.context=context;
+        this.numberOfUsers=numberOfUsers;
         userKey= Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
     }
 
@@ -62,7 +70,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         if(messageList.get(position).getText().equals("")){
             holder.messageText.setVisibility(View.GONE);
         }
-        if(position!=0 && messageList.get(position).getSenderName().equals(messageList.get(position-1).getSenderName())){
+        if((position!=0 && messageList.get(position).getSenderName().equals(messageList.get(position-1).getSenderName()))|| numberOfUsers<=2){
             holder.messageSender.setVisibility(View.GONE);
         }
         if(!messageList.get(position).getImageUri().equals("")) {

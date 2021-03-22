@@ -56,6 +56,11 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         holder.mChatName.setText(mChatList.get(position).getName());
 
+
+        if(mChatList.get(position).getNumberOfUsers()==2){
+            holder.mLastSender.setVisibility(View.GONE);
+        }
+
         if(mChatList.get(position).getLastMessage()!=null) {
             holder.mLastSender.setText(mChatList.get(position).getLastMessageSender());
             holder.mLastMessage.setText(mChatList.get(position).getLastMessage());
@@ -74,7 +79,6 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
                 }
             });
             Glide.with(context).load(Uri.parse(mChatList.get(position).getImageUri())).into(holder.mChatImage);
-            //hello
 
         }
 
@@ -87,6 +91,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
                 intent.putExtra("Chat Key",mChatList.get(position).getUid());
                 intent.putExtra("Chat Name",mChatList.get(position).getName());
                 intent.putExtra("Image Uri",mChatList.get(position).getImageUri());
+                intent.putExtra("Number of Users",mChatList.get(position).getNumberOfUsers());
                 context.startActivity(intent);
             }
         });

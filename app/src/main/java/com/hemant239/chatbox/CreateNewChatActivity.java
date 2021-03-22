@@ -101,6 +101,7 @@ public class CreateNewChatActivity extends AppCompatActivity {
 
         mChatInfo.put("Name",mChatName.getText().toString());
         mChatInfo.put("ID",key);
+        mChatInfo.put("Number of Users",userList.size());
 
         mChatDB.updateChildren(mChatInfo);
 

@@ -162,17 +162,19 @@ public class AllChatsActivity extends AppCompatActivity {
                     final String[] lastSenderName = {""};
                     String lastMessageText="Photo";
                     String lastMessageTime="";
+                    int numberOfUsers=0;
 
                     if(snapshot.child("info").child("Name").getValue()!=null){
                         name[0] =snapshot.child("info").child("Name").getValue().toString();
+                    }
+                    if(snapshot.child("info").child("Number of Users").getValue()!=null){
+                        numberOfUsers =Integer.parseInt(snapshot.child("info").child("Number of Users").getValue().toString());
                     }
                     if(snapshot.child("info").child("Chat Profile Image Uri").getValue()!=null){
                         imageUri=snapshot.child("info").child("Chat Profile Image Uri").getValue().toString();
                     }
                     if(snapshot.child("info").child("Last Message").getValue()!=null){
                         lastMessageId=snapshot.child("info").child("Last Message").getValue().toString();
-
-
 
                         if(snapshot.child("Messages").child(lastMessageId).child("text").getValue()!=null){
                             lastMessageText=snapshot.child("Messages").child(lastMessageId).child("text").getValue().toString();
@@ -187,13 +189,14 @@ public class AllChatsActivity extends AppCompatActivity {
                             final String finalImageUri = imageUri;
                             final String finalLastMessageText = lastMessageText;
                             final String finalLastMessageTime = lastMessageTime;
+                            final int finalNumberOfUsers1 = numberOfUsers;
                             mUserDB.addValueEventListener(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(@NonNull DataSnapshot thisSnapshot) {
                                     if(thisSnapshot.exists()){
                                         if(thisSnapshot.child("Name").getValue()!=null){
                                             lastSenderName[0] =thisSnapshot.child("Name").getValue().toString();
-                                            ChatObject chatObject=new ChatObject(key, name[0], finalImageUri, finalLastMessageText,lastSenderName[0], finalLastMessageTime);
+                                            ChatObject chatObject=new ChatObject(key, name[0], finalImageUri, finalLastMessageText,lastSenderName[0], finalLastMessageTime, finalNumberOfUsers1);
                                             chatList.add(chatObject);
                                             mChatListAdapter.notifyDataSetChanged();
                                         }
@@ -211,7 +214,7 @@ public class AllChatsActivity extends AppCompatActivity {
                     }
 
                     else{
-                        ChatObject chatObject=new ChatObject(key, name[0],imageUri);
+                        ChatObject chatObject=new ChatObject(key, name[0],imageUri,numberOfUsers);
                         chatList.add(chatObject);
                         mChatListAdapter.notifyDataSetChanged();
                     }
