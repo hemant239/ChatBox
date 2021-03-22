@@ -149,25 +149,72 @@ public class AllChatsActivity extends AppCompatActivity {
     }
 
     private void getChatDetails(final String key) {
-        mChatDB=FirebaseDatabase.getInstance().getReference().child("Chats").child(key).child("info");
+        mChatDB=FirebaseDatabase.getInstance().getReference().child("Chats").child(key);
 
         valueEventListenerChatDB= mChatDB.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
-                    String name="";
+                    final String[] name = {""};
                     String imageUri="";
+                    String lastMessageId="";
+                    String lastSenderId="";
+                    final String[] lastSenderName = {""};
+                    String lastMessageText="Photo";
+                    String lastMessageTime="";
 
-                    if(snapshot.child("Name").getValue()!=null){
-                        name=snapshot.child("Name").getValue().toString();
+                    if(snapshot.child("info").child("Name").getValue()!=null){
+                        name[0] =snapshot.child("info").child("Name").getValue().toString();
                     }
-                    if(snapshot.child("Chat Profile Image Uri").getValue()!=null){
-                        imageUri=snapshot.child("Chat Profile Image Uri").getValue().toString();
+                    if(snapshot.child("info").child("Chat Profile Image Uri").getValue()!=null){
+                        imageUri=snapshot.child("info").child("Chat Profile Image Uri").getValue().toString();
+                    }
+                    if(snapshot.child("info").child("Last Message").getValue()!=null){
+                        lastMessageId=snapshot.child("info").child("Last Message").getValue().toString();
+
+
+
+                        if(snapshot.child("Messages").child(lastMessageId).child("text").getValue()!=null){
+                            lastMessageText=snapshot.child("Messages").child(lastMessageId).child("text").getValue().toString();
+                        };
+                        if(snapshot.child("Messages").child(lastMessageId).child("timestamp").getValue()!=null){
+                            lastMessageTime=snapshot.child("Messages").child(lastMessageId).child("timestamp").getValue().toString();
+                        };
+
+                        if(snapshot.child("Messages").child(lastMessageId).child("Sender").getValue()!=null){
+                            lastSenderId=snapshot.child("Messages").child(lastMessageId).child("Sender").getValue().toString();
+                            DatabaseReference mUserDB=FirebaseDatabase.getInstance().getReference().child("Users").child(lastSenderId);
+                            final String finalImageUri = imageUri;
+                            final String finalLastMessageText = lastMessageText;
+                            final String finalLastMessageTime = lastMessageTime;
+                            mUserDB.addValueEventListener(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot thisSnapshot) {
+                                    if(thisSnapshot.exists()){
+                                        if(thisSnapshot.child("Name").getValue()!=null){
+                                            lastSenderName[0] =thisSnapshot.child("Name").getValue().toString();
+                                            ChatObject chatObject=new ChatObject(key, name[0], finalImageUri, finalLastMessageText,lastSenderName[0], finalLastMessageTime);
+                                            chatList.add(chatObject);
+                                            mChatListAdapter.notifyDataSetChanged();
+                                        }
+                                    }
+
+                                }
+
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError error) {
+                                    Toast.makeText(getApplicationContext(),"something went wrong, please try again later last Message Sender",Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        };
+
                     }
 
-                    ChatObject chatObject=new ChatObject(key,name,imageUri);
-                    chatList.add(chatObject);
-                    mChatListAdapter.notifyDataSetChanged();
+                    else{
+                        ChatObject chatObject=new ChatObject(key, name[0],imageUri);
+                        chatList.add(chatObject);
+                        mChatListAdapter.notifyDataSetChanged();
+                    }
                 }
 
             }
@@ -177,9 +224,6 @@ public class AllChatsActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(),"something went wrong, please try again later get chat details",Toast.LENGTH_SHORT).show();
             }
         });
-
-
-
 
     }
 

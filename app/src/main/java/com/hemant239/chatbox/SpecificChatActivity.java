@@ -36,7 +36,9 @@ import com.hemant239.chatbox.chat.ChatAdapter;
 import com.hemant239.chatbox.message.MessageAdapter;
 import com.hemant239.chatbox.message.MessageObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -194,7 +196,7 @@ public class SpecificChatActivity extends AppCompatActivity {
         }
     }
 
-    private void getMessageList(String key) {
+    private void getMessageList(final String key) {
 
         FirebaseUser mUser=FirebaseAuth.getInstance().getCurrentUser();
         DatabaseReference mMessageDb=FirebaseDatabase.getInstance().getReference().child("Chats").child(key).child("Messages");
@@ -209,15 +211,21 @@ public class SpecificChatActivity extends AppCompatActivity {
                         String senderId= Objects.requireNonNull(snapshot.child("Sender").getValue()).toString();
                         String text="";
                         String imageUri="";
+                        String time="";
+
                         if(snapshot.child("text").getValue()!=null){
                             text= Objects.requireNonNull(snapshot.child("text").getValue()).toString();
                         }
                         if(snapshot.child("Image Uri").getValue()!=null){
                             imageUri= Objects.requireNonNull(snapshot.child("Image Uri").getValue()).toString();
                         }
+                        if(snapshot.child("timestamp").getValue()!=null){
+                            time= Objects.requireNonNull(snapshot.child("timestamp").getValue()).toString();
+                        }
 
 
-                        getMessageUserData(snapshot.getKey(),text,imageUri,senderId);
+                        FirebaseDatabase.getInstance().getReference().child("Chats").child(key).child("info").child("Last Message").setValue(snapshot.getKey());
+                        getMessageUserData(snapshot.getKey(),text,imageUri,senderId,time);
                     }
 
                 }
@@ -247,7 +255,7 @@ public class SpecificChatActivity extends AppCompatActivity {
 
     }
 
-    private void getMessageUserData(final String messageKey, final String text,final String imageUri, final String senderId) {
+    private void getMessageUserData(final String messageKey, final String text,final String imageUri, final String senderId,final String time) {
         DatabaseReference mUserDB=FirebaseDatabase.getInstance().getReference().child("Users").child(senderId);
         mUserDB.addValueEventListener(new ValueEventListener() {
             @Override
@@ -255,7 +263,7 @@ public class SpecificChatActivity extends AppCompatActivity {
                 if(snapshot.exists()){
                     String senderName= Objects.requireNonNull(snapshot.child("Name").getValue()).toString();
 
-                    MessageObject newMessage=new MessageObject(messageKey,text,imageUri,senderId,senderName);
+                    MessageObject newMessage=new MessageObject(messageKey,text,imageUri,senderId,senderName,time);
                     messageList.add(newMessage);
 
                     mMessageListLayoutManager.scrollToPosition(messageList.size()-1);
@@ -285,8 +293,12 @@ public class SpecificChatActivity extends AppCompatActivity {
             if(!mMessageText.getText().toString().equals(""))
                 newMessageMap.put("text",mMessageText.getText().toString());
 
+            SimpleDateFormat simpleDateFormat=new SimpleDateFormat("h:mm a");
+            String time=simpleDateFormat.format(Calendar.getInstance().getTime());
+            newMessageMap.put("timestamp",time);
+
+            assert messageId != null;
             if(!mediaAdded.equals("")){
-                assert messageId != null;
                 final StorageReference mediaStorage=FirebaseStorage.getInstance().getReference().child("ChatPhotos").child(key).child(messageId);
                 UploadTask uploadTask= mediaStorage.putFile(Uri.parse(mediaAdded));
                 uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
@@ -303,7 +315,6 @@ public class SpecificChatActivity extends AppCompatActivity {
                 });
             }
             else{
-                assert messageId != null;
                 mChatDb.child(messageId).updateChildren(newMessageMap);
             }
 

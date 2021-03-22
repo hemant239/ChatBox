@@ -54,8 +54,14 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
     }
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
-        holder.mChatID.setText(mChatList.get(position).getUid());
         holder.mChatName.setText(mChatList.get(position).getName());
+
+        if(mChatList.get(position).getLastMessage()!=null) {
+            holder.mLastSender.setText(mChatList.get(position).getLastMessageSender());
+            holder.mLastMessage.setText(mChatList.get(position).getLastMessage());
+            holder.mLastMessageTime.setText(mChatList.get(position).getLastMessageTime());
+        }
+
 
         if(!mChatList.get(position).getImageUri().equals("")){
             holder.mChatImage.setClipToOutline(true);
@@ -94,15 +100,17 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
-        TextView mChatName,mChatID;
+        TextView mChatName, mLastMessage, mLastSender,mLastMessageTime;
 
         ImageView mChatImage;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             mChatName=itemView.findViewById(R.id.chatName);
-            mChatID=itemView.findViewById(R.id.chatID);
             mChatImage=itemView.findViewById(R.id.chatProfileImage);
+            mLastMessage=itemView.findViewById(R.id.lastMessage);
+            mLastSender=itemView.findViewById(R.id.lastMessageSender);
+            mLastMessageTime=itemView.findViewById(R.id.lastMessageTime);
         }
 
     }

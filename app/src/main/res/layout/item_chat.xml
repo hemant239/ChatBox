@@ -37,21 +37,53 @@
 
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/chatID"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Chat ID" />
 
             <TextView
                 android:id="@+id/chatName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Chat Name" />
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                >
+
+
+                <TextView
+                    android:id="@+id/lastMessageSender"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sender" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/colon"
+                    android:layout_toRightOf="@+id/lastMessageSender"
+                    android:text=":"/>
+
+                <TextView
+                    android:id="@+id/lastMessage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_toRightOf="@id/colon"
+                    android:text="this is text " />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/lastMessageTime"
+                    android:layout_alignParentEnd="true"
+                    android:text="35 09 AM" />
+
+
+
+
+            </RelativeLayout>
 
         </LinearLayout>
 

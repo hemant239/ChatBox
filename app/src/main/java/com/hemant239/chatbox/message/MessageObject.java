@@ -9,7 +9,18 @@ public class MessageObject {
             text,
             senderId,
             senderName,
-            imageUri;
+            imageUri,
+            time;
+
+
+    public MessageObject(String messageId,String text,String imageUri,String senderId,String senderName, String time){
+        this.messageId=messageId;
+        this.text=text;
+        this.imageUri=imageUri;
+        this.senderId=senderId;
+        this.senderName=senderName;
+        this.time=time;
+    }
 
     public MessageObject(String messageId,String text,String imageUri,String senderId,String senderName){
         this.messageId=messageId;
@@ -17,7 +28,6 @@ public class MessageObject {
         this.imageUri=imageUri;
         this.senderId=senderId;
         this.senderName=senderName;
-
     }
 
     public MessageObject(String messageId,String text){
@@ -41,6 +51,10 @@ public class MessageObject {
 
     public String getImageUri() {
         return imageUri;
+    }
+
+    public String getTime() {
+        return time;
     }
 
     public void setImageUri(String imageUri) {

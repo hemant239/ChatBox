@@ -56,11 +56,23 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         RelativeLayout.LayoutParams layoutParams= new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         layoutParams.addRule(RelativeLayout.ALIGN_PARENT_END);
 
-
         holder.messageText.setText(messageList.get(position).getText());
         holder.messageSender.setText(messageList.get(position).getSenderName());
+        holder.messageTime.setText(messageList.get(position).getTime());
+        if(messageList.get(position).getText().equals("")){
+            holder.messageText.setVisibility(View.GONE);
+        }
+        if(position!=0 && messageList.get(position).getSenderName().equals(messageList.get(position-1).getSenderName())){
+            holder.messageSender.setVisibility(View.GONE);
+        }
         if(!messageList.get(position).getImageUri().equals("")) {
             holder.mediaImage.setVisibility(View.VISIBLE);
+
+            RelativeLayout.LayoutParams layoutParams1=new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            layoutParams1.addRule(RelativeLayout.RIGHT_OF,R.id.mediaImage);
+            layoutParams1.addRule(RelativeLayout.BELOW,R.id.mediaImage);
+            holder.messageTime.setLayoutParams(layoutParams1);
+
             holder.mediaImage.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -86,7 +98,8 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
         TextView    messageText,
-                    messageSender;
+                    messageSender,
+                    messageTime;
 
         ImageView mediaImage;
 
@@ -97,6 +110,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
             super(itemView);
             messageSender=itemView.findViewById(R.id.messageSender);
             messageText=itemView.findViewById(R.id.messageText);
+            messageTime=itemView.findViewById(R.id.messageTime);
             mediaImage=itemView.findViewById(R.id.mediaImage);
             relativeLayout=itemView.findViewById(R.id.parentRelativeLayout);
         }
