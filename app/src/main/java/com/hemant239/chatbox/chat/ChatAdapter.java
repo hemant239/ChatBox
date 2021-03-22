@@ -74,6 +74,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
                 }
             });
             Glide.with(context).load(Uri.parse(mChatList.get(position).getImageUri())).into(holder.mChatImage);
+            //hello
 
         }
 
