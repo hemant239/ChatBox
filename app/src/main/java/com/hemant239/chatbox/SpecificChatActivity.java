@@ -43,6 +43,9 @@ import java.util.HashMap;
 import java.util.Objects;
 
 public class SpecificChatActivity extends AppCompatActivity {
+
+
+    //TODO:  Add functionality to delete single messages for everyone and single user.
     
     EditText mMessageText;
     Button mSendMessage,
@@ -55,18 +58,16 @@ public class SpecificChatActivity extends AppCompatActivity {
     RecyclerView.Adapter<MessageAdapter.ViewHolder> mMessageAdapter;
     RecyclerView.LayoutManager mMessageListLayoutManager;
 
-
-
-
     ArrayList<MessageObject> messageList;
+
+    StorageReference profileStorage;
+    UploadTask uploadTask;
 
     String key;
 
     String mediaAdded;
 
     int numberOfUsers;
-
-    boolean isImageChanged;
 
 
     @Override
@@ -78,6 +79,9 @@ public class SpecificChatActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayShowCustomEnabled(true);
         getSupportActionBar().setCustomView(R.layout.app_bar_specific_chat);
         View view=getSupportActionBar().getCustomView();
+
+
+
 
         chatName=view.findViewById(R.id.chatAppName);
         chatPhoto=view.findViewById(R.id.chatAppProfileImage);
@@ -145,6 +149,7 @@ public class SpecificChatActivity extends AppCompatActivity {
     }
 
     final int CHANGE_CHAT_PHOTO_CODE=1;
+    final int CANCEL_UPLOAD_TASK=3;
     private void openGalleryToChangeProfilePhoto() {
         Intent intent=new Intent();
         intent.setType("image/*");
@@ -161,11 +166,13 @@ public class SpecificChatActivity extends AppCompatActivity {
             switch (requestCode){
                 case CHANGE_CHAT_PHOTO_CODE:
 
-                    final StorageReference profileStorage= FirebaseStorage.getInstance().getReference().child("ChatProfilePhotos").child(key);
+                    profileStorage= FirebaseStorage.getInstance().getReference().child("ChatProfilePhotos").child(key);
                     final DatabaseReference mChatDb=FirebaseDatabase.getInstance().getReference().child("Chats").child(key).child("info");
 
                     assert data != null;
-                    final UploadTask uploadTask=profileStorage.putFile(Objects.requireNonNull(data.getData()));
+                    uploadTask=profileStorage.putFile(Objects.requireNonNull(data.getData()));
+                    Intent intent =new Intent(getApplicationContext(),LoadingActivity.class);
+                    startActivityForResult(intent,CANCEL_UPLOAD_TASK);
                     uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                         @Override
                         public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
@@ -173,10 +180,10 @@ public class SpecificChatActivity extends AppCompatActivity {
                                 @Override
                                 public void onSuccess(Uri uri) {
                                     mChatDb.child("Chat Profile Image Uri").setValue(uri.toString());
-                                    isImageChanged=true;
+                                    Glide.with(getApplicationContext()).load(uri).into((ImageView) findViewById(R.id.chatAppProfileImage));
+                                    ((LoadingActivity)LoadingActivity.context).finish();
                                 }
                             });
-
                         }
                     });
 
@@ -188,9 +195,12 @@ public class SpecificChatActivity extends AppCompatActivity {
                     mediaAdded= Objects.requireNonNull(data.getData()).toString();
                     break;
 
-
-
-
+                case CANCEL_UPLOAD_TASK:
+                    if(uploadTask.isComplete()){
+                        profileStorage.delete();
+                    }
+                    uploadTask.cancel();
+                    break;
 
                 default:
                     Toast.makeText(getApplicationContext(),"something went wrong, please try again later",Toast.LENGTH_SHORT).show();
@@ -283,7 +293,6 @@ public class SpecificChatActivity extends AppCompatActivity {
         });
     }
 
-
     private void sendMessage(String key) {
         final DatabaseReference mChatDb= FirebaseDatabase.getInstance().getReference().child("Chats").child(key).child("Messages");
         FirebaseUser mUser= FirebaseAuth.getInstance().getCurrentUser();
@@ -351,7 +360,6 @@ public class SpecificChatActivity extends AppCompatActivity {
         mAddMedia=findViewById(R.id.addMedia);
     }
 
-
     @Override
     public void onBackPressed() {
             Intent intent=new Intent(this,AllChatsActivity.class);
@@ -368,7 +376,7 @@ public class SpecificChatActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
-            case R.id.changeProfilePictureMenu:
+            case R.id.changeChatPictureMenu:
                 openGalleryToChangeProfilePhoto();
                 break;
 

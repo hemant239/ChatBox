@@ -136,6 +136,7 @@ public class LogInActivity extends AppCompatActivity {
         FirebaseUser mUser= mAuth.getCurrentUser();
         if(mUser!=null){
             Intent intent= new Intent(this, AllChatsActivity.class);
+            intent.putExtra("First time",true);
             startActivity(intent);
             finish();
         }

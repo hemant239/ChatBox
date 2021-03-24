@@ -1,5 +1,6 @@
 package com.hemant239.chatbox.chat;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -93,6 +94,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
                 intent.putExtra("Image Uri",mChatList.get(position).getImageUri());
                 intent.putExtra("Number of Users",mChatList.get(position).getNumberOfUsers());
                 context.startActivity(intent);
+                ((AllChatsActivity)context).finish();
             }
         });
 

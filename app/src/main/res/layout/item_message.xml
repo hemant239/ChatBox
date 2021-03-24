@@ -58,7 +58,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="5:49 AM"
-            android:textSize="10dp"
             android:id="@+id/messageTime"
             android:layout_alignBottom="@id/messageText"
             android:layout_toEndOf="@id/messageText"

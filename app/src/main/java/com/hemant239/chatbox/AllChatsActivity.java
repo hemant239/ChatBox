@@ -44,6 +44,9 @@ public class AllChatsActivity extends AppCompatActivity {
 
     ArrayList<ChatObject> chatList;
 
+    DatabaseReference mUserDB, mChatDB;
+    ValueEventListener valueEventListenerUserDB,valueEventListenerChatDB;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,11 +54,17 @@ public class AllChatsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_all_chats);
 
 
+        if(getIntent().getBooleanExtra("First time",false)){
+            requestUserPermission();
+        }
+
+
+
         chatList=new ArrayList<>();
 
 
         initializeViews();
-        requestUserPermission();
+
         initializeRecyclerViews();
 
 
@@ -78,8 +87,7 @@ public class AllChatsActivity extends AppCompatActivity {
         return mChatListAdapter;
     }
 
-    DatabaseReference mUserDB, mChatDB;
-    ValueEventListener valueEventListenerUserDB,valueEventListenerChatDB;
+
 
 
     @Override
@@ -282,6 +290,13 @@ public class AllChatsActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mUserDB.removeEventListener(valueEventListenerUserDB);
+        mChatDB.removeEventListener(valueEventListenerChatDB);
+
+    }
 
     private void initializeViews() {
     }
