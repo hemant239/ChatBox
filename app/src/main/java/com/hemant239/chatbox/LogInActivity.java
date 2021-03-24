@@ -92,6 +92,7 @@ public class LogInActivity extends AppCompatActivity {
                 findViewById(R.id.codeLayout).setVisibility(View.VISIBLE);
                 mVerificationId=verificationId;
                 mSend.setText("Verify Code");
+                //temp;
             }
         };
 
