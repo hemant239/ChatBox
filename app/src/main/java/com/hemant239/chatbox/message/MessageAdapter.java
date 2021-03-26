@@ -69,17 +69,29 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         holder.messageTime.setText(messageList.get(position).getTime());
         if(messageList.get(position).getText().equals("")){
             holder.messageText.setVisibility(View.GONE);
+            RelativeLayout.LayoutParams layoutParams1=new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            layoutParams1.addRule(RelativeLayout.ALIGN_END,R.id.mediaImage);
+            layoutParams1.addRule(RelativeLayout.BELOW,R.id.mediaImage);
+            holder.messageTime.setLayoutParams(layoutParams1);
         }
         if((position!=0 && messageList.get(position).getSenderName().equals(messageList.get(position-1).getSenderName()))|| numberOfUsers<=2){
             holder.messageSender.setVisibility(View.GONE);
         }
         if(!messageList.get(position).getImageUri().equals("")) {
-            holder.mediaImage.setVisibility(View.VISIBLE);
 
-            RelativeLayout.LayoutParams layoutParams1=new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            layoutParams1.addRule(RelativeLayout.RIGHT_OF,R.id.mediaImage);
-            layoutParams1.addRule(RelativeLayout.BELOW,R.id.mediaImage);
-            holder.messageTime.setLayoutParams(layoutParams1);
+            holder.mediaImage.setVisibility(View.VISIBLE);
+            holder.mediaImage.setClipToOutline(true);
+            if(!messageList.get(position).getText().equals("")){
+                RelativeLayout.LayoutParams layoutParams1=new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                layoutParams1.addRule(RelativeLayout.ALIGN_END,R.id.mediaImage);
+                layoutParams1.addRule(RelativeLayout.ALIGN_BOTTOM,R.id.messageText);
+                holder.messageTime.setLayoutParams(layoutParams1);
+
+            }
+
+
+
+
 
             holder.mediaImage.setOnClickListener(new View.OnClickListener() {
                 @Override

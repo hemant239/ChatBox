@@ -11,8 +11,9 @@
         android:layout_height="wrap_content"
         android:id="@+id/parentRelativeLayout"
         android:background="@drawable/custom_background_message_sender"
-        android:layout_marginStart="2dp"
-        android:layout_marginEnd="2dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="5dp"
+        android:padding="5dp"
         >
 
 
@@ -29,6 +30,17 @@
             android:fontFamily="sans-serif-medium"/>
 
 
+        <ImageView
+            android:layout_width="250dp"
+            android:layout_height="250dp"
+            android:src="@mipmap/ic_launcher"
+            android:layout_below="@id/messageSender"
+            android:id="@+id/mediaImage"
+            android:layout_marginStart="2dp"
+            android:scaleType="fitXY"
+
+            />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -38,20 +50,8 @@
             android:fontFamily="sans-serif-medium"
             android:textDirection="ltr"
             android:layout_margin="5dp"
-            android:layout_below="@id/messageSender"
+            android:layout_below="@id/mediaImage"
             android:maxWidth="250dp"/>
-
-
-        <ImageView
-            android:layout_width="250dp"
-            android:layout_height="250dp"
-            android:src="@mipmap/ic_launcher"
-            android:layout_below="@id/messageText"
-            android:id="@+id/mediaImage"
-            android:layout_marginStart="2dp"
-            android:visibility="gone"
-
-            />
 
 
         <TextView
