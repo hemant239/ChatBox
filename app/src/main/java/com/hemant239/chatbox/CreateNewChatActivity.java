@@ -45,6 +45,9 @@ public class CreateNewChatActivity extends AppCompatActivity {
     ArrayList<UserObject> contactsList;
     ArrayList<UserObject> userList;
 
+    HashMap<String,Boolean> userDisplayed;
+    //this is to make sure that if the user has 2 contacts with same number,only one of them is displayed.
+
 
 
 
@@ -56,6 +59,7 @@ public class CreateNewChatActivity extends AppCompatActivity {
 
         userList=new ArrayList<>();
         contactsList=new ArrayList<>();
+        userDisplayed= new HashMap<>();
 
 
         initializeViews();
@@ -77,6 +81,7 @@ public class CreateNewChatActivity extends AppCompatActivity {
                     String s = mChatName.getText().toString().trim();
                     if (s.length() != 0) {
                         createChat();
+                        startActivity(new Intent(getApplicationContext(),AllChatsActivity.class));
                         finish();
                     } else {
                         Toast.makeText(getApplicationContext(), "Give the name to the chat mf", Toast.LENGTH_SHORT).show();
@@ -151,7 +156,8 @@ public class CreateNewChatActivity extends AppCompatActivity {
 
 
 
-            if(name != null){
+            if(name != null && userDisplayed.get(phoneNumber)==null){
+                userDisplayed.put(phoneNumber,true);
                 UserObject contactUser=new UserObject(name,phoneNumber);
                 checkUserDetails(contactUser);
                 
@@ -220,6 +226,11 @@ public class CreateNewChatActivity extends AppCompatActivity {
         mUserList.setLayoutManager(mUserListLayoutManager);
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        startActivity(new Intent(getApplicationContext(),AllChatsActivity.class));
+    }
 
     private void initializeViews() {
         mCancelButton=findViewById(R.id.cancelButton);

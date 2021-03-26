@@ -213,9 +213,26 @@ public class SpecificChatActivity extends AppCompatActivity {
     private void getMessageList(final String key) {
 
         FirebaseUser mUser=FirebaseAuth.getInstance().getCurrentUser();
-        DatabaseReference mMessageDb=FirebaseDatabase.getInstance().getReference().child("Chats").child(key).child("Messages");
+        final DatabaseReference mMessageDb=FirebaseDatabase.getInstance().getReference().child("Chats").child(key).child("Messages");
 
         if(mUser!=null){
+
+
+            mMessageDb.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if(snapshot.exists() && snapshot.getValue().toString().equals("true")){
+                        mMessageDb.setValue(null);
+                        recreate();
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
+
 
             mMessageDb.addChildEventListener(new ChildEventListener() {
                 @Override
@@ -307,7 +324,7 @@ public class SpecificChatActivity extends AppCompatActivity {
 
             SimpleDateFormat simpleDateFormat=new SimpleDateFormat("h:mm a");
             String time=simpleDateFormat.format(Calendar.getInstance().getTime());
-            newMessageMap.put("timestamp",time);
+            newMessageMap.put("timestamp",time.toUpperCase());
 
             assert messageId != null;
             if(!mediaAdded.equals("")){
@@ -329,12 +346,9 @@ public class SpecificChatActivity extends AppCompatActivity {
             else{
                 mChatDb.child(messageId).updateChildren(newMessageMap);
             }
-
             mMessageText.setText("");
             mediaAdded="";
         }
-
-
     }
 
     private void initializeRecyclerViews() {
@@ -382,7 +396,7 @@ public class SpecificChatActivity extends AppCompatActivity {
 
             case R.id.clearChat:
                 DatabaseReference mMessageDb=FirebaseDatabase.getInstance().getReference().child("Chats").child(key).child("Messages");
-                mMessageDb.setValue(null);
+                mMessageDb.setValue(true);
                 recreate();
                 break;
 
