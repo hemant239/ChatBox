@@ -45,7 +45,7 @@ public class AllChatsActivity extends AppCompatActivity {
     ArrayList<ChatObject> chatList;
 
     DatabaseReference mUserDB, mChatDB;
-    ValueEventListener valueEventListenerChatDB;
+
 
 
     @Override
@@ -69,6 +69,7 @@ public class AllChatsActivity extends AppCompatActivity {
 
 
         getChatList();
+
 
 
     }
@@ -125,12 +126,19 @@ public class AllChatsActivity extends AppCompatActivity {
         FirebaseUser mUser=FirebaseAuth.getInstance().getCurrentUser();
         mUserDB= FirebaseDatabase.getInstance().getReference().child("Users");
 
+
+
+
         if(mUser!=null){
             mUserDB=mUserDB.child(mUser.getUid()).child("chat");
+
+
 
             mUserDB.addChildEventListener(new ChildEventListener() {
                 @Override
                 public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+
                     if(snapshot.exists() && snapshot.getKey()!=null){
                         getChatDetails(snapshot.getKey());
                     }
@@ -167,7 +175,8 @@ public class AllChatsActivity extends AppCompatActivity {
     private void getChatDetails(final String key) {
         mChatDB=FirebaseDatabase.getInstance().getReference().child("Chats").child(key);
 
-        valueEventListenerChatDB= mChatDB.addValueEventListener(new ValueEventListener() {
+
+        mChatDB.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
@@ -180,14 +189,19 @@ public class AllChatsActivity extends AppCompatActivity {
                     String lastMessageTime="";
                     int numberOfUsers=0;
 
+
+                    //Toast.makeText(getApplicationContext(),"on Data Change is called",Toast.LENGTH_SHORT).show();
+
                     //TODO: add toast messages to check if it runs for other chats.
 
                     if(snapshot.child("info").child("Name").getValue()!=null){
                         name[0] = Objects.requireNonNull(snapshot.child("info").child("Name").getValue()).toString();
                     }
-                    if(snapshot.child("info").child("Number of Users").getValue()!=null){
-                        numberOfUsers =Integer.parseInt(Objects.requireNonNull(snapshot.child("info").child("Number of Users").getValue()).toString());
+
+                    if(snapshot.child("info").child("Number Of Users").getValue()!=null){
+                        numberOfUsers =Integer.parseInt(Objects.requireNonNull(snapshot.child("info").child("Number Of Users").getValue()).toString());
                     }
+
                     if(snapshot.child("info").child("Chat Profile Image Uri").getValue()!=null){
                         imageUri= Objects.requireNonNull(snapshot.child("info").child("Chat Profile Image Uri").getValue()).toString();
                     }
@@ -203,7 +217,7 @@ public class AllChatsActivity extends AppCompatActivity {
 
                         if(snapshot.child("Messages").child(lastMessageId).child("Sender").getValue()!=null){
                             lastSenderId= Objects.requireNonNull(snapshot.child("Messages").child(lastMessageId).child("Sender").getValue()).toString();
-                            DatabaseReference mUserDB=FirebaseDatabase.getInstance().getReference().child("Users").child(lastSenderId);
+                            DatabaseReference mUserDB=FirebaseDatabase.getInstance().getReference().child("Users").child(lastSenderId).child("Name");
                             final String finalImageUri = imageUri;
                             final String finalLastMessageText = lastMessageText;
                             final String finalLastMessageTime = lastMessageTime;
@@ -212,15 +226,27 @@ public class AllChatsActivity extends AppCompatActivity {
                                 @Override
                                 public void onDataChange(@NonNull DataSnapshot thisSnapshot) {
                                     if(thisSnapshot.exists()){
-                                        if(thisSnapshot.child("Name").getValue()!=null){
-                                            lastSenderName[0] = Objects.requireNonNull(thisSnapshot.child("Name").getValue()).toString();
+                                        if(thisSnapshot.getValue()!=null){
+                                            lastSenderName[0] = Objects.requireNonNull(thisSnapshot.getValue()).toString();
                                             ChatObject chatObject=new ChatObject(key, name[0], finalImageUri, finalLastMessageText,lastSenderName[0], finalLastMessageTime, finalNumberOfUsers1);
-                                            chatList.add(chatObject);
-                                            mChatListAdapter.notifyItemInserted(chatList.size()-1);
+                                            //Toast.makeText(getApplicationContext(),"chat is added to list",Toast.LENGTH_SHORT).show();
+
+                                            int indexOfObject=chatList.indexOf(chatObject);
+                                            if(indexOfObject==-1){
+                                                chatList.add(chatObject);
+                                                mChatListAdapter.notifyItemInserted(chatList.size()-1);
+                                            }
+                                            else{
+                                                chatList.set(indexOfObject,chatObject);
+                                                mChatListAdapter.notifyItemChanged(indexOfObject);
+                                            }
+
+
                                         }
                                     }
 
                                 }
+
 
                                 @Override
                                 public void onCancelled(@NonNull DatabaseError error) {
@@ -229,11 +255,21 @@ public class AllChatsActivity extends AppCompatActivity {
                             });
                         }
 
+                        else{
+                            ChatObject chatObject=new ChatObject(key, name[0],imageUri,numberOfUsers);
+                            chatList.add(chatObject);
+                            //Toast.makeText(getApplicationContext(),"chat is added to list",Toast.LENGTH_SHORT).show();
+                            mChatListAdapter.notifyItemInserted(chatList.size()-1);
+                        }
+
+
+
                     }
 
                     else{
                         ChatObject chatObject=new ChatObject(key, name[0],imageUri,numberOfUsers);
                         chatList.add(chatObject);
+                        //Toast.makeText(getApplicationContext(),"chat is added to list",Toast.LENGTH_SHORT).show();
                         mChatListAdapter.notifyItemInserted(chatList.size()-1);
                     }
                 }
@@ -289,9 +325,6 @@ public class AllChatsActivity extends AppCompatActivity {
 
     private void logOut() {
 
-
-        //mUserDB.removeEventListener(valueEventListenerUserDB);
-        //mChatDB.removeEventListener(valueEventListenerChatDB);
         FirebaseAuth.getInstance().signOut();
 
 
@@ -301,13 +334,7 @@ public class AllChatsActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        //mUserDB.removeEventListener(valueEventListenerUserDB);
-        //mChatDB.removeEventListener(valueEventListenerChatDB);
 
-    }
 
     private void initializeViews() {
     }

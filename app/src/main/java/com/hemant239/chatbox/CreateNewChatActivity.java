@@ -98,38 +98,37 @@ public class CreateNewChatActivity extends AppCompatActivity {
         DatabaseReference mChatDB= FirebaseDatabase.getInstance().getReference().child("Chats");
         String key= mChatDB.push().getKey();
 
+
+
         DatabaseReference mUserDB=FirebaseDatabase.getInstance().getReference().child("Users");
 
         mChatDB=mChatDB.child(key).child("info");
 
         HashMap<String,Object> mChatInfo=new HashMap<>();
 
-        mChatInfo.put("Name",mChatName.getText().toString());
-        mChatInfo.put("ID",key);
-        mChatInfo.put("Number of Users",userList.size());
-
-        mChatDB.updateChildren(mChatInfo);
-
-        mChatDB=mChatDB.child("user");
-        mChatInfo=new HashMap<>();
+        int noOfUsers=1;
 
         for(UserObject user:userList){
-            if(user.isSelected()){
-                if(user.getUid()!=null) {
-                    mChatInfo.put(user.getUid(), "true");
-                    mUserDB.child(user.getUid()).child("chat").child(key).setValue("true");
-                }
+            if(user.isSelected() && user.getUid()!=null){
+                noOfUsers++;
+                mChatInfo.put("user/"+user.getUid(), true);
+                mUserDB.child(user.getUid()).child("chat").child(key).setValue(true);
             }
         }
+        mChatInfo.put("Name",mChatName.getText().toString());
+        mChatInfo.put("ID",key);
+        mChatInfo.put("Number Of Users",noOfUsers);
+
 
         FirebaseUser mUser= FirebaseAuth.getInstance().getCurrentUser();
         if(mUser!=null) {
-            mChatInfo.put(mUser.getUid(),"true");
-            mUserDB.child(mUser.getUid()).child("chat").child(key).setValue("true");
+            mChatInfo.put("user/"+mUser.getUid(),true);
+            mUserDB.child(mUser.getUid()).child("chat").child(key).setValue(true);
         }
 
 
         mChatDB.updateChildren(mChatInfo);
+
 
     }
 

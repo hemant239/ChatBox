@@ -1,5 +1,7 @@
 package com.hemant239.chatbox.chat;
 
+import java.util.Objects;
+
 public class ChatObject {
     String uid, name , imageUri,lastMessage,lastMessageSender,lastMessageTime;
 
@@ -72,5 +74,19 @@ public class ChatObject {
 
     public int getNumberOfUsers() {
         return numberOfUsers;
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ChatObject that = (ChatObject) o;
+        return uid.equals(that.uid);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(uid);
     }
 }

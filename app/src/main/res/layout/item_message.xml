@@ -38,7 +38,7 @@
             android:id="@+id/mediaImage"
             android:layout_marginStart="2dp"
             android:scaleType="fitXY"
-
+            android:visibility="gone"
             />
 
         <TextView

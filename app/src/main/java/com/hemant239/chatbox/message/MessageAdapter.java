@@ -74,7 +74,8 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
             layoutParams1.addRule(RelativeLayout.BELOW,R.id.mediaImage);
             holder.messageTime.setLayoutParams(layoutParams1);
         }
-        if((position!=0 && messageList.get(position).getSenderName().equals(messageList.get(position-1).getSenderName()))|| numberOfUsers<=2){
+        if((position!=0 && messageList.get(position).getSenderId().equals(messageList.get(position-1).getSenderId()))
+                || numberOfUsers<=2 || messageList.get(position).getSenderId().equals(userKey)){
             holder.messageSender.setVisibility(View.GONE);
         }
         if(!messageList.get(position).getImageUri().equals("")) {
@@ -84,7 +85,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
             if(!messageList.get(position).getText().equals("")){
                 RelativeLayout.LayoutParams layoutParams1=new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                 layoutParams1.addRule(RelativeLayout.ALIGN_END,R.id.mediaImage);
-                layoutParams1.addRule(RelativeLayout.ALIGN_BOTTOM,R.id.messageText);
+                layoutParams1.addRule(RelativeLayout.BELOW,R.id.messageText);
                 holder.messageTime.setLayoutParams(layoutParams1);
 
             }

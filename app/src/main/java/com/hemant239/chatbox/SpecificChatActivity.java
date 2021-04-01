@@ -255,7 +255,7 @@ public class SpecificChatActivity extends AppCompatActivity {
                         }
 
 
-                        FirebaseDatabase.getInstance().getReference().child("Chats").child(key).child("info").child("Last Message").setValue(snapshot.getKey());
+
                         getMessageUserData(snapshot.getKey(),text,imageUri,senderId,time);
                     }
 
@@ -310,21 +310,23 @@ public class SpecificChatActivity extends AppCompatActivity {
     }
 
     private void sendMessage(String key) {
-        final DatabaseReference mChatDb= FirebaseDatabase.getInstance().getReference().child("Chats").child(key).child("Messages");
+        final DatabaseReference mChatDb= FirebaseDatabase.getInstance().getReference().child("Chats").child(key);
         FirebaseUser mUser= FirebaseAuth.getInstance().getCurrentUser();
-        final String messageId=mChatDb.push().getKey();
+        final String messageId=mChatDb.child("Messages").push().getKey();
         final HashMap<String,Object> newMessageMap=new HashMap<>();
 
         if(mUser!=null && (!mMessageText.getText().toString().equals("") || !mediaAdded.equals(""))){
 
-            newMessageMap.put("Sender",mUser.getUid());
+            newMessageMap.put("Messages/"+messageId+"/Sender",mUser.getUid());
+
+            newMessageMap.put("info/Last Message",messageId);
 
             if(!mMessageText.getText().toString().equals(""))
-                newMessageMap.put("text",mMessageText.getText().toString());
+                newMessageMap.put("Messages/"+messageId+"/text",mMessageText.getText().toString());
 
             SimpleDateFormat simpleDateFormat=new SimpleDateFormat("h:mm a");
             String time=simpleDateFormat.format(Calendar.getInstance().getTime());
-            newMessageMap.put("timestamp",time.toUpperCase());
+            newMessageMap.put("Messages/"+messageId+"/timestamp",time.toUpperCase());
 
             assert messageId != null;
             if(!mediaAdded.equals("")){
@@ -336,15 +338,15 @@ public class SpecificChatActivity extends AppCompatActivity {
                         mediaStorage.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                             @Override
                             public void onSuccess(Uri uri) {
-                                newMessageMap.put("Image Uri",uri.toString());
-                                mChatDb.child(messageId).updateChildren(newMessageMap);
+                                newMessageMap.put("Messages/"+messageId+"/Image Uri",uri.toString());
+                                mChatDb.updateChildren(newMessageMap);
                             }
                         });
                     }
                 });
             }
             else{
-                mChatDb.child(messageId).updateChildren(newMessageMap);
+                mChatDb.updateChildren(newMessageMap);
             }
             mMessageText.setText("");
             mediaAdded="";

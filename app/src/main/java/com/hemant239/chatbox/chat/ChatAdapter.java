@@ -60,6 +60,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
 
         if(mChatList.get(position).getNumberOfUsers()==2){
             holder.mLastSender.setVisibility(View.GONE);
+            holder.mColon.setVisibility(View.GONE);
         }
 
         if(mChatList.get(position).getLastMessage()!=null) {
@@ -92,7 +93,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
                 intent.putExtra("Chat Key",mChatList.get(position).getUid());
                 intent.putExtra("Chat Name",mChatList.get(position).getName());
                 intent.putExtra("Image Uri",mChatList.get(position).getImageUri());
-                intent.putExtra("Number of Users",mChatList.get(position).getNumberOfUsers());
+                intent.putExtra("Number Of Users",mChatList.get(position).getNumberOfUsers());
                 context.startActivity(intent);
                 ((AllChatsActivity)context).finish();
             }
@@ -108,7 +109,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
-        TextView mChatName, mLastMessage, mLastSender,mLastMessageTime;
+        TextView mChatName, mLastMessage, mLastSender,mLastMessageTime,mColon;
 
         ImageView mChatImage;
 
@@ -119,6 +120,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
             mLastMessage=itemView.findViewById(R.id.lastMessage);
             mLastSender=itemView.findViewById(R.id.lastMessageSender);
             mLastMessageTime=itemView.findViewById(R.id.lastMessageTime);
+            mColon=itemView.findViewById(R.id.colon);
         }
 
     }
