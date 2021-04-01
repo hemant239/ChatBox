@@ -1,12 +1,5 @@
 package com.hemant239.chatbox;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -18,6 +11,13 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -32,7 +32,6 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.hemant239.chatbox.chat.ChatAdapter;
 import com.hemant239.chatbox.message.MessageAdapter;
 import com.hemant239.chatbox.message.MessageObject;
 
@@ -108,11 +107,6 @@ public class SpecificChatActivity extends AppCompatActivity {
             }
         });
 
-
-
-
-
-        
         initializeViews();
         messageList=new ArrayList<>();
         initializeRecyclerViews();
@@ -121,8 +115,6 @@ public class SpecificChatActivity extends AppCompatActivity {
 
         key=getIntent().getStringExtra("Chat Key");
 
-
-        
         mSendMessage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -221,7 +213,7 @@ public class SpecificChatActivity extends AppCompatActivity {
             mMessageDb.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    if(snapshot.exists() && snapshot.getValue().toString().equals("true")){
+                    if(snapshot.exists() && Objects.requireNonNull(snapshot.getValue()).toString().equals("true")){
                         mMessageDb.setValue(null);
                         recreate();
                     }
@@ -253,8 +245,6 @@ public class SpecificChatActivity extends AppCompatActivity {
                         if(snapshot.child("timestamp").getValue()!=null){
                             time= Objects.requireNonNull(snapshot.child("timestamp").getValue()).toString();
                         }
-
-
 
                         getMessageUserData(snapshot.getKey(),text,imageUri,senderId,time);
                     }
@@ -321,8 +311,9 @@ public class SpecificChatActivity extends AppCompatActivity {
 
             newMessageMap.put("info/Last Message",messageId);
 
-            if(!mMessageText.getText().toString().equals(""))
-                newMessageMap.put("Messages/"+messageId+"/text",mMessageText.getText().toString());
+            if(!mMessageText.getText().toString().equals("")) {
+                newMessageMap.put("Messages/" + messageId + "/text", mMessageText.getText().toString());
+            }
 
             SimpleDateFormat simpleDateFormat=new SimpleDateFormat("h:mm a");
             String time=simpleDateFormat.format(Calendar.getInstance().getTime());

@@ -7,7 +7,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -16,7 +15,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.hemant239.chatbox.ImageViewActivity;
 import com.hemant239.chatbox.R;
 
@@ -89,10 +87,6 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
                 holder.messageTime.setLayoutParams(layoutParams1);
 
             }
-
-
-
-
 
             holder.mediaImage.setOnClickListener(new View.OnClickListener() {
                 @Override

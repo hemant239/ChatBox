@@ -58,21 +58,12 @@ public class AllChatsActivity extends AppCompatActivity {
             requestUserPermission();
         }
 
-
-
         chatList=new ArrayList<>();
-
-
         initializeViews();
-
         initializeRecyclerViews();
-
-
         getChatList();
-
-
-
     }
+
     final int CHANGE_PROFILE_PHOTO_CODE=1;
     private void openGallery() {
         Intent intent=new Intent();
@@ -126,19 +117,11 @@ public class AllChatsActivity extends AppCompatActivity {
         FirebaseUser mUser=FirebaseAuth.getInstance().getCurrentUser();
         mUserDB= FirebaseDatabase.getInstance().getReference().child("Users");
 
-
-
-
         if(mUser!=null){
             mUserDB=mUserDB.child(mUser.getUid()).child("chat");
-
-
-
             mUserDB.addChildEventListener(new ChildEventListener() {
                 @Override
                 public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
-
                     if(snapshot.exists() && snapshot.getKey()!=null){
                         getChatDetails(snapshot.getKey());
                     }
@@ -164,8 +147,6 @@ public class AllChatsActivity extends AppCompatActivity {
 
                 }
             });
-
-
 
         }
 
@@ -246,7 +227,6 @@ public class AllChatsActivity extends AppCompatActivity {
                                     }
 
                                 }
-
 
                                 @Override
                                 public void onCancelled(@NonNull DatabaseError error) {

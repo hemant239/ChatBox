@@ -10,9 +10,6 @@ public class UserObject {
     private boolean isSelected=false;
 
 
-    public UserObject(){
-    }
-
     public UserObject(String uid,String name,String phoneNumber,String profileImageUri){
         this.uid            =uid;
         this.name           =name;

@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    >
+    android:layout_height="wrap_content">
 
 
     <RelativeLayout
@@ -23,7 +21,7 @@
             android:text="Sender ID"
             android:id="@+id/messageSender"
             android:textColor="#0720FA"
-            android:textSize="20dp"
+            android:textSize="20sp"
             android:layout_marginStart="2dp"
             android:textDirection="ltr"
             android:textStyle="bold"
@@ -39,7 +37,7 @@
             android:layout_marginStart="2dp"
             android:scaleType="fitXY"
             android:visibility="gone"
-            />
+            android:contentDescription="TODO" />
 
         <TextView
             android:layout_width="wrap_content"

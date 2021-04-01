@@ -1,7 +1,5 @@
 package com.hemant239.chatbox.message;
 
-import android.os.Message;
-
 public class MessageObject {
 
 

@@ -1,21 +1,19 @@
 package com.hemant239.chatbox;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -31,7 +29,7 @@ import com.hemant239.chatbox.utils.CountryToPhonePrefix;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.Objects;
 
 public class CreateNewChatActivity extends AppCompatActivity {
 
@@ -47,9 +45,6 @@ public class CreateNewChatActivity extends AppCompatActivity {
 
     HashMap<String,Boolean> userDisplayed;
     //this is to make sure that if the user has 2 contacts with same number,only one of them is displayed.
-
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,7 +78,8 @@ public class CreateNewChatActivity extends AppCompatActivity {
                         createChat();
                         startActivity(new Intent(getApplicationContext(),AllChatsActivity.class));
                         finish();
-                    } else {
+                    }
+                    else {
                         Toast.makeText(getApplicationContext(), "Give the name to the chat mf", Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -102,6 +98,7 @@ public class CreateNewChatActivity extends AppCompatActivity {
 
         DatabaseReference mUserDB=FirebaseDatabase.getInstance().getReference().child("Users");
 
+        assert key != null;
         mChatDB=mChatDB.child(key).child("info");
 
         HashMap<String,Object> mChatInfo=new HashMap<>();
@@ -162,6 +159,8 @@ public class CreateNewChatActivity extends AppCompatActivity {
                 
             }
         }
+        assert cursor != null;
+        cursor.close();
     }
 
     private String getIsoPrefix() {
@@ -189,7 +188,7 @@ public class CreateNewChatActivity extends AppCompatActivity {
                     for(DataSnapshot childSnapshot:snapshot.getChildren()){
                         if(childSnapshot.getKey()!=null && childSnapshot.child("Name").getValue()!=null  && childSnapshot.child("Phone Number").getValue()!=null ){
                             if(childSnapshot.child("Profile Image Uri").getValue()!=null){
-                                UserObject user=new UserObject(childSnapshot.getKey(),contactUser.getName(),contactUser.getPhoneNumber(),childSnapshot.child("Profile Image Uri").getValue().toString());
+                                UserObject user=new UserObject(childSnapshot.getKey(),contactUser.getName(),contactUser.getPhoneNumber(), Objects.requireNonNull(childSnapshot.child("Profile Image Uri").getValue()).toString());
                                 userList.add(user);
                             }
                             else{
@@ -215,8 +214,6 @@ public class CreateNewChatActivity extends AppCompatActivity {
         mUserList=findViewById(R.id.recyclerViewList);
         mUserList.setHasFixedSize(false);
         mUserList.setNestedScrollingEnabled(false);
-
-
 
         mUserListAdapter= new UserAdapter(userList,this);
         mUserList.setAdapter(mUserListAdapter);
