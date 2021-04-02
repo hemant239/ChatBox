@@ -11,13 +11,15 @@ import androidx.appcompat.app.AppCompatActivity;
 public class LoadingActivity extends AppCompatActivity {
 
     Button mCancelUpload;
-
+    static Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_loading);
         initializeViews();
+
+        context=this;
 
 
 

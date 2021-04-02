@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.firebase.auth.FirebaseAuth;
 import com.hemant239.chatbox.ImageViewActivity;
 import com.hemant239.chatbox.R;
@@ -62,6 +63,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         RelativeLayout.LayoutParams layoutParams= new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         layoutParams.addRule(RelativeLayout.ALIGN_PARENT_END);
 
+
         holder.messageText.setText(messageList.get(position).getText());
         holder.messageSender.setText(messageList.get(position).getSenderName());
         holder.messageTime.setText(messageList.get(position).getTime());
@@ -103,11 +105,23 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
             holder.relativeLayout.setBackgroundResource(R.drawable.custom_background_message_reciever);
         }
 
+
+
     }
 
     @Override
     public int getItemCount() {
         return messageList.size();
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return position;
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
