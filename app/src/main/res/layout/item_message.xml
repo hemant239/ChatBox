@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:layout_margin="2dp"
+    >
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:text="TUE, APRIL 06, 2021"
+        android:id="@+id/DateView"
+        android:textSize="18sp"
+        android:background="@color/colorAccent"
+        android:fontFamily="sans-serif-black"
+        android:textColor="#ffffff"
+        android:visibility="gone"/>
 
 
     <RelativeLayout
@@ -10,8 +24,10 @@
         android:id="@+id/parentRelativeLayout"
         android:background="@drawable/custom_background_message_sender"
         android:layout_marginStart="10dp"
-        android:layout_marginEnd="5dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="3dp"
         android:padding="5dp"
+        android:layout_below="@id/DateView"
         >
 
 

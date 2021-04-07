@@ -1,5 +1,9 @@
 package com.hemant239.chatbox.message;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class MessageObject {
 
 
@@ -8,10 +12,20 @@ public class MessageObject {
             senderId,
             senderName,
             imageUri,
-            time;
+            time,
+            date;
 
 
-    public MessageObject(String messageId,String text,String imageUri,String senderId,String senderName, String time){
+    public MessageObject(String messageId,String text,String imageUri,String senderId,String senderName, String time, String date) {
+        this.messageId=messageId;
+        this.text=text;
+        this.imageUri=imageUri;
+        this.senderId=senderId;
+        this.senderName=senderName;
+        this.time=time;
+        this.date=date;
+    }
+    public MessageObject(String messageId,String text,String imageUri,String senderId,String senderName, String time) {
         this.messageId=messageId;
         this.text=text;
         this.imageUri=imageUri;
@@ -67,5 +81,7 @@ public class MessageObject {
         return senderId;
     }
 
-
+    public String getDate() {
+        return date;
+    }
 }

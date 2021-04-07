@@ -3,53 +3,68 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".SpecificChatActivity">
 
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:text="TUE, APRIL 06, 2021"
+        android:id="@+id/onScrollingDate"
+        android:textSize="18sp"
+        android:background="@color/colorAccent"
+        android:fontFamily="sans-serif-black"
+        android:textColor="#CA2F2F"
+        android:visibility="gone"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/recyclerViewListMessages"
         android:scrollbars="vertical"
-        android:layout_above="@+id/inputLayout"
+        android:layout_above="@id/inputLayout"
+        android:padding="5dp"
         />
+
 
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:id="@+id/inputLayout"
-        android:weightSum="1"
-        android:layout_alignParentBottom="true">
-
+        android:orientation="horizontal"
+        android:layout_alignParentBottom="true"
+        android:padding="5dp">
 
         <EditText
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:id="@+id/messageText"
-            android:layout_weight="0.8"
-            android:hint="type your message here mf"/>
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/sendMessage"
-            android:text="SEND"
-            android:layout_weight="0.1"/>
+            android:hint="type your message here, mf "
+            android:layout_weight="0.9"
+            android:background="@android:color/transparent"
+            />
 
 
         <Button
-            android:layout_width="wrap_content"
+            android:layout_width="40dp"
             android:layout_height="wrap_content"
             android:id="@+id/addMedia"
-            android:text="MEDIA"
-            android:layout_weight="0.1"/>
+            android:background="@drawable/ic_baseline_add_photo_alternate_24"
+            />
 
-
-
-
-
+        <Button
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/sendMessage"
+            android:background="@drawable/ic_baseline_send_24"
+            />
     </LinearLayout>
+
+
+
 
 </RelativeLayout>

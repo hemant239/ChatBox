@@ -3,6 +3,8 @@ package com.hemant239.chatbox;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -38,11 +40,11 @@ import com.hemant239.chatbox.message.MessageObject;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Objects;
 
 public class SpecificChatActivity extends AppCompatActivity {
-
 
     //TODO:  Add functionality to delete single messages for everyone and single user.
     
@@ -52,6 +54,8 @@ public class SpecificChatActivity extends AppCompatActivity {
 
     TextView chatName;
     ImageView chatPhoto;
+
+    TextView onDateScrolling;
 
     RecyclerView mMessageList;
     RecyclerView.Adapter<MessageAdapter.ViewHolder> mMessageAdapter;
@@ -79,7 +83,9 @@ public class SpecificChatActivity extends AppCompatActivity {
         getSupportActionBar().setCustomView(R.layout.app_bar_specific_chat);
         View view=getSupportActionBar().getCustomView();
 
-
+        DisplayMetrics displayMetrics=new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        float density=displayMetrics.density;
 
 
         chatName=view.findViewById(R.id.chatAppName);
@@ -109,11 +115,14 @@ public class SpecificChatActivity extends AppCompatActivity {
 
         initializeViews();
         messageList=new ArrayList<>();
-        initializeRecyclerViews();
+        initializeRecyclerViews(density);
 
         mediaAdded="";
 
         key=getIntent().getStringExtra("Chat Key");
+
+        getMessageList(key);
+
 
         mSendMessage.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -129,7 +138,20 @@ public class SpecificChatActivity extends AppCompatActivity {
             }
         });
 
-        getMessageList(key);
+        mMessageList.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                if(newState==RecyclerView.SCROLL_STATE_IDLE){
+                    onDateScrolling.setVisibility(View.GONE);
+                }
+                else if(newState==RecyclerView.SCROLL_STATE_DRAGGING){
+                    int position=((LinearLayoutManager)mMessageListLayoutManager).findFirstCompletelyVisibleItemPosition();
+                    onDateScrolling.setText(messageList.get(position).getDate());
+                    onDateScrolling.setVisibility(View.VISIBLE);
+                }
+            }
+        });
     }
     final int ADD_MEDIA_CODE=2;
     private void openGalleryToAddMedia() {
@@ -235,6 +257,7 @@ public class SpecificChatActivity extends AppCompatActivity {
                         String text="";
                         String imageUri="";
                         String time="";
+                        String date="";
 
                         if(snapshot.child("text").getValue()!=null){
                             text= Objects.requireNonNull(snapshot.child("text").getValue()).toString();
@@ -245,8 +268,10 @@ public class SpecificChatActivity extends AppCompatActivity {
                         if(snapshot.child("timestamp").getValue()!=null){
                             time= Objects.requireNonNull(snapshot.child("timestamp").getValue()).toString();
                         }
-
-                        getMessageUserData(snapshot.getKey(),text,imageUri,senderId,time);
+                        if(snapshot.child("date").getValue()!=null){
+                            date= Objects.requireNonNull(snapshot.child("date").getValue()).toString();
+                        }
+                        getMessageUserData(snapshot.getKey(),text,imageUri,senderId,time,date);
                     }
 
                 }
@@ -276,7 +301,7 @@ public class SpecificChatActivity extends AppCompatActivity {
 
     }
 
-    private void getMessageUserData(final String messageKey, final String text,final String imageUri, final String senderId,final String time) {
+    private void getMessageUserData(final String messageKey, final String text, final String imageUri, final String senderId, final String time, final String date) {
         DatabaseReference mUserDB=FirebaseDatabase.getInstance().getReference().child("Users").child(senderId);
         mUserDB.addValueEventListener(new ValueEventListener() {
             @Override
@@ -284,7 +309,8 @@ public class SpecificChatActivity extends AppCompatActivity {
                 if(snapshot.exists()){
                     String senderName= Objects.requireNonNull(snapshot.child("Name").getValue()).toString();
 
-                    MessageObject newMessage=new MessageObject(messageKey,text,imageUri,senderId,senderName,time);
+                    MessageObject newMessage=new MessageObject(messageKey,text,imageUri,senderId,senderName,time,date);
+                    //messageList.add(newMessage);
                     messageList.add(newMessage);
 
                     mMessageListLayoutManager.scrollToPosition(messageList.size()-1);
@@ -315,9 +341,17 @@ public class SpecificChatActivity extends AppCompatActivity {
                 newMessageMap.put("Messages/" + messageId + "/text", mMessageText.getText().toString());
             }
 
-            SimpleDateFormat simpleDateFormat=new SimpleDateFormat("h:mm a");
-            String time=simpleDateFormat.format(Calendar.getInstance().getTime());
+            Calendar calendar=Calendar.getInstance();
+            Date date=calendar.getTime();
+
+
+            SimpleDateFormat simpleDateFormatTime=new SimpleDateFormat("h:mm a");
+            String time=simpleDateFormatTime.format(date);
+            SimpleDateFormat simpleDateFormatDate=new SimpleDateFormat("EEE, MMMM dd, yyyy");
+            String dateTemp=simpleDateFormatDate.format(date);
+
             newMessageMap.put("Messages/"+messageId+"/timestamp",time.toUpperCase());
+            newMessageMap.put("Messages/"+messageId+"/date",dateTemp.toUpperCase());
 
             assert messageId != null;
             if(!mediaAdded.equals("")){
@@ -344,7 +378,7 @@ public class SpecificChatActivity extends AppCompatActivity {
         }
     }
 
-    private void initializeRecyclerViews() {
+    private void initializeRecyclerViews(float density) {
 
         mMessageList=findViewById(R.id.recyclerViewListMessages);
         mMessageList.setHasFixedSize(false);
@@ -352,10 +386,11 @@ public class SpecificChatActivity extends AppCompatActivity {
 
 
 
-        mMessageAdapter= new MessageAdapter(messageList,this,numberOfUsers);
+        mMessageAdapter= new MessageAdapter(messageList,this,numberOfUsers,density);
         mMessageList.setAdapter(mMessageAdapter);
 
-        mMessageListLayoutManager=new LinearLayoutManager(getApplicationContext(),RecyclerView.VERTICAL,false);
+        mMessageListLayoutManager=new LinearLayoutManager(getApplicationContext(), RecyclerView.VERTICAL, false);
+        //((LinearLayoutManager)mMessageListLayoutManager).setStackFromEnd(false);
         mMessageList.setLayoutManager(mMessageListLayoutManager);
     }
 
@@ -364,6 +399,7 @@ public class SpecificChatActivity extends AppCompatActivity {
         mMessageText=findViewById(R.id.messageText);
         mSendMessage=findViewById(R.id.sendMessage);
         mAddMedia=findViewById(R.id.addMedia);
+        onDateScrolling=findViewById(R.id.onScrollingDate);
     }
 
     @Override

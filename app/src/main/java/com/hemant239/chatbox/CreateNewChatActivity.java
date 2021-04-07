@@ -29,6 +29,7 @@ import com.hemant239.chatbox.utils.CountryToPhonePrefix;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 public class CreateNewChatActivity extends AppCompatActivity {
@@ -185,7 +186,7 @@ public class CreateNewChatActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
 
-                    for(DataSnapshot childSnapshot:snapshot.getChildren()){
+                    for(DataSnapshot childSnapshot: (snapshot.getChildren())){
                         if(childSnapshot.getKey()!=null && childSnapshot.child("Name").getValue()!=null  && childSnapshot.child("Phone Number").getValue()!=null ){
                             if(childSnapshot.child("Profile Image Uri").getValue()!=null){
                                 UserObject user=new UserObject(childSnapshot.getKey(),contactUser.getName(),contactUser.getPhoneNumber(), Objects.requireNonNull(childSnapshot.child("Profile Image Uri").getValue()).toString());

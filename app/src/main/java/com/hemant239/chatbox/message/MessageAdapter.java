@@ -3,12 +3,15 @@ package com.hemant239.chatbox.message;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -20,6 +23,8 @@ import com.hemant239.chatbox.ImageViewActivity;
 import com.hemant239.chatbox.R;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Objects;
 
 public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHolder> {
@@ -28,6 +33,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
 
     String userKey;
     int numberOfUsers;
+    float density;
 
     Context context;
 
@@ -43,6 +49,14 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         this.numberOfUsers=numberOfUsers;
         userKey= Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
     }
+    public MessageAdapter(ArrayList<MessageObject> messageList, Context context, int numberOfUsers,float density){
+        this.messageList=messageList;
+        this.context=context;
+        this.numberOfUsers=numberOfUsers;
+        userKey= Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+        this.density=density;
+    }
+
 
     @NonNull
     @Override
@@ -60,13 +74,18 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
     @Override
     public void onBindViewHolder(@NonNull MessageAdapter.ViewHolder holder, final int position) {
 
-        RelativeLayout.LayoutParams layoutParams= new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        layoutParams.addRule(RelativeLayout.ALIGN_PARENT_END);
-
-
         holder.messageText.setText(messageList.get(position).getText());
         holder.messageSender.setText(messageList.get(position).getSenderName());
         holder.messageTime.setText(messageList.get(position).getTime());
+
+
+        if(position==0 || !messageList.get(position).getDate().equals(messageList.get(position - 1).getDate())){
+            holder.messageDate.setText(messageList.get(position).getDate());
+            holder.messageDate.setVisibility(View.VISIBLE);
+        }
+
+
+
         if(messageList.get(position).getText().equals("")){
             holder.messageText.setVisibility(View.GONE);
             RelativeLayout.LayoutParams layoutParams1=new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -78,6 +97,22 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
                 || numberOfUsers<=2 || messageList.get(position).getSenderId().equals(userKey)){
             holder.messageSender.setVisibility(View.GONE);
         }
+
+
+
+
+
+        holder.messageText.measure(View.MeasureSpec.UNSPECIFIED,View.MeasureSpec.UNSPECIFIED);
+        float width=holder.messageText.getMeasuredWidth()/density;
+
+        if(width>240){
+            //RelativeLayout.LayoutParams layoutParams2= (RelativeLayout.LayoutParams) holder.messageTime.getLayoutParams();
+            RelativeLayout.LayoutParams layoutParams1=new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            layoutParams1.addRule(RelativeLayout.ALIGN_END,R.id.messageText);
+            layoutParams1.addRule(RelativeLayout.BELOW,R.id.messageText);
+            holder.messageTime.setLayoutParams(layoutParams1);
+        }
+
         if(!messageList.get(position).getImageUri().equals("")) {
 
             holder.mediaImage.setVisibility(View.VISIBLE);
@@ -90,6 +125,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
 
             }
 
+
             holder.mediaImage.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -100,10 +136,16 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
             });
             Glide.with(context).load(Uri.parse(messageList.get(position).getImageUri())).into(holder.mediaImage);
         }
+
+
         if(messageList.get(position).getSenderId().equals(userKey)){
+            RelativeLayout.LayoutParams layoutParams= (RelativeLayout.LayoutParams) holder.relativeLayout.getLayoutParams();
+            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_END);
             holder.relativeLayout.setLayoutParams(layoutParams);
             holder.relativeLayout.setBackgroundResource(R.drawable.custom_background_message_reciever);
         }
+
+
 
 
 
@@ -128,7 +170,8 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
 
         TextView    messageText,
                     messageSender,
-                    messageTime;
+                    messageTime,
+                    messageDate;
 
         ImageView mediaImage;
 
@@ -141,6 +184,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
             messageText=itemView.findViewById(R.id.messageText);
             messageTime=itemView.findViewById(R.id.messageTime);
             mediaImage=itemView.findViewById(R.id.mediaImage);
+            messageDate=itemView.findViewById(R.id.DateView);
             relativeLayout=itemView.findViewById(R.id.parentRelativeLayout);
         }
     }
