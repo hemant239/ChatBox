@@ -324,6 +324,7 @@ public class SpecificChatActivity extends AppCompatActivity {
         });
     }
 
+//
     private void sendMessage(String key) {
         final DatabaseReference mChatDb= FirebaseDatabase.getInstance().getReference().child("Chats").child(key);
         FirebaseUser mUser= FirebaseAuth.getInstance().getCurrentUser();
