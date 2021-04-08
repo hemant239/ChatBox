@@ -79,10 +79,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         holder.messageTime.setText(messageList.get(position).getTime());
 
 
-        if(position==0 || !messageList.get(position).getDate().equals(messageList.get(position - 1).getDate())){
-            holder.messageDate.setText(messageList.get(position).getDate());
-            holder.messageDate.setVisibility(View.VISIBLE);
-        }
+
 
 
 
@@ -142,13 +139,13 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
             RelativeLayout.LayoutParams layoutParams= (RelativeLayout.LayoutParams) holder.relativeLayout.getLayoutParams();
             layoutParams.addRule(RelativeLayout.ALIGN_PARENT_END);
             holder.relativeLayout.setLayoutParams(layoutParams);
-            holder.relativeLayout.setBackgroundResource(R.drawable.custom_background_message_reciever);
+            holder.relativeLayout.setBackgroundResource(R.drawable.custom_background_message_receiver);
         }
 
-
-
-
-
+        if(position==0 || !messageList.get(position).getDate().equals(messageList.get(position - 1).getDate())){
+            holder.messageDate.setText(messageList.get(position).getDate());
+            holder.messageDate.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override

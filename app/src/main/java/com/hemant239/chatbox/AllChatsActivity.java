@@ -306,8 +306,6 @@ public class AllChatsActivity extends AppCompatActivity {
     private void logOut() {
 
         FirebaseAuth.getInstance().signOut();
-
-
         Intent intent=new Intent(this,LogInActivity.class);
         startActivity(intent);
         finish();

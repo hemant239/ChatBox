@@ -310,7 +310,6 @@ public class SpecificChatActivity extends AppCompatActivity {
                     String senderName= Objects.requireNonNull(snapshot.child("Name").getValue()).toString();
 
                     MessageObject newMessage=new MessageObject(messageKey,text,imageUri,senderId,senderName,time,date);
-                    //messageList.add(newMessage);
                     messageList.add(newMessage);
 
                     mMessageListLayoutManager.scrollToPosition(messageList.size()-1);
@@ -390,7 +389,6 @@ public class SpecificChatActivity extends AppCompatActivity {
         mMessageList.setAdapter(mMessageAdapter);
 
         mMessageListLayoutManager=new LinearLayoutManager(getApplicationContext(), RecyclerView.VERTICAL, false);
-        //((LinearLayoutManager)mMessageListLayoutManager).setStackFromEnd(false);
         mMessageList.setLayoutManager(mMessageListLayoutManager);
     }
 

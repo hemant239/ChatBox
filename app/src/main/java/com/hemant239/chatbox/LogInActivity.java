@@ -49,8 +49,8 @@ public class LogInActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        FirebaseApp.initializeApp(this);
-        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+
+
         //TODO: set it false for logout.
 
         mAuth=FirebaseAuth.getInstance();
