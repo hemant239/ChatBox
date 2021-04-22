@@ -57,9 +57,9 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
             holder.mColon.setVisibility(View.GONE);
         }
 
-        if(mChatList.get(position).getLastMessage()!=null) {
+        if(mChatList.get(position).getLastMessageText()!=null) {
             holder.mLastSender.setText(mChatList.get(position).getLastMessageSender());
-            holder.mLastMessage.setText(mChatList.get(position).getLastMessage());
+            holder.mLastMessage.setText(mChatList.get(position).getLastMessageText());
             holder.mLastMessageTime.setText(mChatList.get(position).getLastMessageTime());
         }
 
@@ -88,6 +88,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
                 intent.putExtra("Chat Name",mChatList.get(position).getName());
                 intent.putExtra("Image Uri",mChatList.get(position).getImageUri());
                 intent.putExtra("Number Of Users",mChatList.get(position).getNumberOfUsers());
+                intent.putExtra("Last Message ID",mChatList.get(position).getLastMessageId());
                 context.startActivity(intent);
                 ((AllChatsActivity)context).finish();
             }

@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -39,7 +40,9 @@ import com.hemant239.chatbox.message.MessageObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Objects;
@@ -70,6 +73,8 @@ public class SpecificChatActivity extends AppCompatActivity {
 
     String mediaAdded;
 
+    String lastMessageId;
+
     int numberOfUsers;
 
 
@@ -96,6 +101,7 @@ public class SpecificChatActivity extends AppCompatActivity {
         String name=getIntent().getStringExtra("Chat Name");
         final String imageUri=(getIntent().getStringExtra("Image Uri"));
         numberOfUsers=getIntent().getIntExtra("Number Of Users",0);
+        lastMessageId=getIntent().getStringExtra("Last Message ID");
 
 
         chatName.setText(name);
@@ -231,13 +237,14 @@ public class SpecificChatActivity extends AppCompatActivity {
 
         if(mUser!=null){
 
-
-            mMessageDb.addValueEventListener(new ValueEventListener() {
+            mMessageDb.orderByPriority().addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    if(snapshot.exists() && Objects.requireNonNull(snapshot.getValue()).toString().equals("true")){
-                        mMessageDb.setValue(null);
-                        recreate();
+                    if(snapshot.exists()){
+                        if(Objects.requireNonNull(snapshot.getValue()).toString().equals("true")) {
+                            mMessageDb.setValue(null);
+                            recreate();
+                        }
                     }
                 }
 
@@ -248,11 +255,54 @@ public class SpecificChatActivity extends AppCompatActivity {
             });
 
 
-            mMessageDb.addChildEventListener(new ChildEventListener() {
+            mMessageDb.orderByPriority().addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if(snapshot.exists()){
+                        int numberOfMessages= (int) snapshot.getChildrenCount();
+                        for(int i=0;i<numberOfMessages;i++){
+                            messageList.add(new MessageObject());
+                        }
+
+                        for(DataSnapshot childSnapshot:snapshot.getChildren()){
+                            if(childSnapshot.exists()){
+                                numberOfMessages--;
+                                String senderId= Objects.requireNonNull(childSnapshot.child("Sender").getValue()).toString();
+                                String text="";
+                                String imageUri="";
+                                String time="";
+                                String date="";
+
+                                if(childSnapshot.child("text").getValue()!=null){
+                                    text= Objects.requireNonNull(childSnapshot.child("text").getValue()).toString();
+                                }
+                                if(childSnapshot.child("Image Uri").getValue()!=null){
+                                    imageUri= Objects.requireNonNull(childSnapshot.child("Image Uri").getValue()).toString();
+                                }
+                                if(childSnapshot.child("timestamp").getValue()!=null){
+                                    time= Objects.requireNonNull(childSnapshot.child("timestamp").getValue()).toString();
+                                }
+                                if(childSnapshot.child("date").getValue()!=null) {
+                                    date = Objects.requireNonNull(childSnapshot.child("date").getValue()).toString();
+                                }
+                                getMessageUserData(childSnapshot.getKey(),text,imageUri,senderId,time,date,false,numberOfMessages);
+                            }
+                        }
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
+
+
+            mMessageDb.limitToFirst(1).addChildEventListener(new ChildEventListener() {
                 @Override
                 public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
 
-                    if(snapshot.exists()){
+                    if(snapshot.exists() && !snapshot.getKey().equals(lastMessageId)){
                         String senderId= Objects.requireNonNull(snapshot.child("Sender").getValue()).toString();
                         String text="";
                         String imageUri="";
@@ -271,7 +321,8 @@ public class SpecificChatActivity extends AppCompatActivity {
                         if(snapshot.child("date").getValue()!=null){
                             date= Objects.requireNonNull(snapshot.child("date").getValue()).toString();
                         }
-                        getMessageUserData(snapshot.getKey(),text,imageUri,senderId,time,date);
+
+                        getMessageUserData(snapshot.getKey(),text,imageUri,senderId,time,date,true,0);
                     }
 
                 }
@@ -301,7 +352,7 @@ public class SpecificChatActivity extends AppCompatActivity {
 
     }
 
-    private void getMessageUserData(final String messageKey, final String text, final String imageUri, final String senderId, final String time, final String date) {
+    private void getMessageUserData(final String messageKey, final String text, final String imageUri, final String senderId, final String time, final String date, final boolean isNewMessage, final int index) {
         DatabaseReference mUserDB=FirebaseDatabase.getInstance().getReference().child("Users").child(senderId);
         mUserDB.addValueEventListener(new ValueEventListener() {
             @Override
@@ -310,10 +361,19 @@ public class SpecificChatActivity extends AppCompatActivity {
                     String senderName= Objects.requireNonNull(snapshot.child("Name").getValue()).toString();
 
                     MessageObject newMessage=new MessageObject(messageKey,text,imageUri,senderId,senderName,time,date);
-                    messageList.add(newMessage);
 
-                    mMessageListLayoutManager.scrollToPosition(messageList.size()-1);
-                    mMessageAdapter.notifyItemInserted(messageList.size()-1);
+
+
+                    if(isNewMessage){
+                        messageList.add(newMessage);
+                        mMessageListLayoutManager.scrollToPosition(messageList.size()-1);
+                        mMessageAdapter.notifyItemInserted(messageList.size()-1);
+                    }
+                    else{
+                        messageList.set(index,newMessage);
+                        mMessageListLayoutManager.scrollToPosition(messageList.size()-1);
+                        mMessageAdapter.notifyItemChanged(index);
+                    }
                 }
             }
 
@@ -328,21 +388,25 @@ public class SpecificChatActivity extends AppCompatActivity {
     private void sendMessage(String key) {
         final DatabaseReference mChatDb= FirebaseDatabase.getInstance().getReference().child("Chats").child(key);
         FirebaseUser mUser= FirebaseAuth.getInstance().getCurrentUser();
-        final String messageId=mChatDb.child("Messages").push().getKey();
+
         final HashMap<String,Object> newMessageMap=new HashMap<>();
 
         if(mUser!=null && (!mMessageText.getText().toString().equals("") || !mediaAdded.equals(""))){
 
+            final String messageId=mChatDb.child("Messages").push().getKey();
+
+
             newMessageMap.put("Messages/"+messageId+"/Sender",mUser.getUid());
 
             newMessageMap.put("info/Last Message",messageId);
-
             if(!mMessageText.getText().toString().equals("")) {
                 newMessageMap.put("Messages/" + messageId + "/text", mMessageText.getText().toString());
             }
 
             Calendar calendar=Calendar.getInstance();
-            Date date=calendar.getTime();
+            final Date date=calendar.getTime();
+            assert messageId != null;
+
 
 
             SimpleDateFormat simpleDateFormatTime=new SimpleDateFormat("h:mm a");
@@ -352,8 +416,6 @@ public class SpecificChatActivity extends AppCompatActivity {
 
             newMessageMap.put("Messages/"+messageId+"/timestamp",time.toUpperCase());
             newMessageMap.put("Messages/"+messageId+"/date",dateTemp.toUpperCase());
-
-            assert messageId != null;
             if(!mediaAdded.equals("")){
                 final StorageReference mediaStorage=FirebaseStorage.getInstance().getReference().child("ChatPhotos").child(key).child(messageId);
                 UploadTask uploadTask= mediaStorage.putFile(Uri.parse(mediaAdded));
@@ -365,6 +427,7 @@ public class SpecificChatActivity extends AppCompatActivity {
                             public void onSuccess(Uri uri) {
                                 newMessageMap.put("Messages/"+messageId+"/Image Uri",uri.toString());
                                 mChatDb.updateChildren(newMessageMap);
+                                mChatDb.child("Messages").child(messageId).setPriority(-date.getTime());
                             }
                         });
                     }
@@ -372,6 +435,7 @@ public class SpecificChatActivity extends AppCompatActivity {
             }
             else{
                 mChatDb.updateChildren(newMessageMap);
+                mChatDb.child("Messages").child(messageId).setPriority(-date.getTime());
             }
             mMessageText.setText("");
             mediaAdded="";
@@ -388,7 +452,6 @@ public class SpecificChatActivity extends AppCompatActivity {
 
         mMessageAdapter= new MessageAdapter(messageList,this,numberOfUsers,density);
         mMessageList.setAdapter(mMessageAdapter);
-
         mMessageListLayoutManager=new LinearLayoutManager(getApplicationContext(), RecyclerView.VERTICAL, false);
         mMessageList.setLayoutManager(mMessageListLayoutManager);
     }

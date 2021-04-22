@@ -3,6 +3,7 @@ package com.hemant239.chatbox.message;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -74,77 +75,105 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
     @Override
     public void onBindViewHolder(@NonNull MessageAdapter.ViewHolder holder, final int position) {
 
-        holder.messageText.setText(messageList.get(position).getText());
-        holder.messageSender.setText(messageList.get(position).getSenderName());
-        holder.messageTime.setText(messageList.get(position).getTime());
-
-
-
-
-
-
-        if(messageList.get(position).getText().equals("")){
-            holder.messageText.setVisibility(View.GONE);
-            RelativeLayout.LayoutParams layoutParams1=new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            layoutParams1.addRule(RelativeLayout.ALIGN_END,R.id.mediaImage);
-            layoutParams1.addRule(RelativeLayout.BELOW,R.id.mediaImage);
-            holder.messageTime.setLayoutParams(layoutParams1);
-        }
-        if((position!=0 && messageList.get(position).getSenderId().equals(messageList.get(position-1).getSenderId()))
-                || numberOfUsers<=2 || messageList.get(position).getSenderId().equals(userKey)){
-            holder.messageSender.setVisibility(View.GONE);
+        final MessageObject curMessage=messageList.get(position);
+        if(curMessage.messageId  ==null && curMessage.text==null &&
+                curMessage.senderId==null && curMessage.senderName==null &&
+                curMessage.imageUri==null && curMessage.time==null &&  curMessage.date==null){
+            holder.relativeLayout.setVisibility(View.GONE);
         }
 
+        else {
+            holder.relativeLayout.setVisibility(View.VISIBLE);
+            holder.messageText.setText(curMessage.getText());
+            holder.messageSender.setText(curMessage.getSenderName());
+            holder.messageTime.setText(curMessage.getTime());
 
 
-
-
-        holder.messageText.measure(View.MeasureSpec.UNSPECIFIED,View.MeasureSpec.UNSPECIFIED);
-        float width=holder.messageText.getMeasuredWidth()/density;
-
-        if(width>240){
-            //RelativeLayout.LayoutParams layoutParams2= (RelativeLayout.LayoutParams) holder.messageTime.getLayoutParams();
-            RelativeLayout.LayoutParams layoutParams1=new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            layoutParams1.addRule(RelativeLayout.ALIGN_END,R.id.messageText);
-            layoutParams1.addRule(RelativeLayout.BELOW,R.id.messageText);
-            holder.messageTime.setLayoutParams(layoutParams1);
-        }
-
-        if(!messageList.get(position).getImageUri().equals("")) {
-
-            holder.mediaImage.setVisibility(View.VISIBLE);
-            holder.mediaImage.setClipToOutline(true);
-            if(!messageList.get(position).getText().equals("")){
-                RelativeLayout.LayoutParams layoutParams1=new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                layoutParams1.addRule(RelativeLayout.ALIGN_END,R.id.mediaImage);
-                layoutParams1.addRule(RelativeLayout.BELOW,R.id.messageText);
+            if (curMessage.getText().equals("")) {
+                holder.messageText.setVisibility(View.GONE);
+                RelativeLayout.LayoutParams layoutParams1 = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                layoutParams1.addRule(RelativeLayout.ALIGN_END, R.id.mediaImage);
+                layoutParams1.addRule(RelativeLayout.BELOW, R.id.mediaImage);
                 holder.messageTime.setLayoutParams(layoutParams1);
+            }
+
+
+            if ((position != messageList.size() - 1 && curMessage.getSenderId().equals(messageList.get(position + 1).getSenderId()))
+                    || numberOfUsers <= 2 || curMessage.getSenderId().equals(userKey)) {
+                holder.messageSender.setVisibility(View.GONE);
+            }
+
+            if(position>0 && position==messageList.size()-1){
+                MessageObject prevMessage=messageList.get(position-1);
+                if(prevMessage.messageId  ==null && prevMessage.text==null &&
+                        prevMessage.senderId==null && prevMessage.senderName==null &&
+                        prevMessage.imageUri==null && prevMessage.time==null &&  prevMessage.date==null){
+                }
+                else if(curMessage.getSenderId().equals(prevMessage.senderId)){
+                    holder.messageSender.setVisibility(View.GONE);
+                }
 
             }
 
 
-            holder.mediaImage.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent =new Intent(context, ImageViewActivity.class);
-                    intent.putExtra("URI",messageList.get(position).getImageUri());
-                    context.startActivity(intent);
+
+            holder.messageText.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+            float width = holder.messageText.getMeasuredWidth() / density;
+
+            if (width > 240) {
+                //RelativeLayout.LayoutParams layoutParams2= (RelativeLayout.LayoutParams) holder.messageTime.getLayoutParams();
+                RelativeLayout.LayoutParams layoutParams1 = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                layoutParams1.addRule(RelativeLayout.ALIGN_END, R.id.messageText);
+                layoutParams1.addRule(RelativeLayout.BELOW, R.id.messageText);
+                holder.messageTime.setLayoutParams(layoutParams1);
+            }
+
+            if (!curMessage.getImageUri().equals("")) {
+
+                holder.mediaImage.setVisibility(View.VISIBLE);
+                holder.mediaImage.setClipToOutline(true);
+                if (!curMessage.getText().equals("")) {
+                    RelativeLayout.LayoutParams layoutParams1 = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                    layoutParams1.addRule(RelativeLayout.ALIGN_END, R.id.mediaImage);
+                    layoutParams1.addRule(RelativeLayout.BELOW, R.id.messageText);
+                    holder.messageTime.setLayoutParams(layoutParams1);
+
                 }
-            });
-            Glide.with(context).load(Uri.parse(messageList.get(position).getImageUri())).into(holder.mediaImage);
-        }
 
 
-        if(messageList.get(position).getSenderId().equals(userKey)){
-            RelativeLayout.LayoutParams layoutParams= (RelativeLayout.LayoutParams) holder.relativeLayout.getLayoutParams();
-            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_END);
-            holder.relativeLayout.setLayoutParams(layoutParams);
-            holder.relativeLayout.setBackgroundResource(R.drawable.custom_background_message_receiver);
-        }
+                holder.mediaImage.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(context, ImageViewActivity.class);
+                        intent.putExtra("URI", curMessage.getImageUri());
+                        context.startActivity(intent);
+                    }
+                });
+                Glide.with(context).load(Uri.parse(curMessage.getImageUri())).into(holder.mediaImage);
+            }
 
-        if(position==0 || !messageList.get(position).getDate().equals(messageList.get(position - 1).getDate())){
-            holder.messageDate.setText(messageList.get(position).getDate());
-            holder.messageDate.setVisibility(View.VISIBLE);
+
+            if (curMessage.getSenderId().equals(userKey)) {
+                RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) holder.relativeLayout.getLayoutParams();
+                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_END);
+                holder.relativeLayout.setLayoutParams(layoutParams);
+                holder.relativeLayout.setBackgroundResource(R.drawable.custom_background_message_receiver);
+            }
+
+            if (position!=messageList.size()-1 && !curMessage.getDate().equals(messageList.get(position + 1).getDate())) {
+                holder.messageDate.setText(messageList.get(position+1).getDate());
+                holder.messageDate.setVisibility(View.VISIBLE);
+            }
+
+            if(position==0){
+                RelativeLayout.LayoutParams layoutParams1= (RelativeLayout.LayoutParams) holder.relativeLayout.getLayoutParams();
+                layoutParams1.addRule(RelativeLayout.BELOW,R.id.DateView);
+                RelativeLayout.LayoutParams layoutParams2= (RelativeLayout.LayoutParams) holder.messageDate.getLayoutParams();
+                layoutParams2.removeRule(RelativeLayout.BELOW);
+                holder.messageDate.setText(curMessage.getDate());
+                holder.messageDate.setVisibility(View.VISIBLE);
+            }
+
         }
     }
 

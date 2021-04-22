@@ -3,7 +3,7 @@ package com.hemant239.chatbox.chat;
 import java.util.Objects;
 
 public class ChatObject {
-    String uid, name , imageUri,lastMessage,lastMessageSender,lastMessageTime;
+    String uid, name , imageUri,lastMessageText,lastMessageSender,lastMessageTime, lastMessageId;
 
     int numberOfUsers;
 
@@ -28,24 +28,38 @@ public class ChatObject {
         this.imageUri=imageUri;
         this.numberOfUsers=numberOfUsers;
     }
-    public ChatObject(String uid, String name, String imageUri,String lastMessage,String lastMessageSender, String lastMessageTime){
+    public ChatObject(String uid, String name, String imageUri,String lastMessageText,String lastMessageSender, String lastMessageTime){
         this.uid=uid;
         this.name=name;
         this.imageUri=imageUri;
-        this.lastMessage=lastMessage;
+        this.lastMessageText=lastMessageText;
         this.lastMessageSender=lastMessageSender;
         this.lastMessageTime=lastMessageTime;
     }
 
-    public ChatObject(String uid, String name, String imageUri,String lastMessage,String lastMessageSender, String lastMessageTime,int numberOfUsers){
+    public ChatObject(String uid, String name, String imageUri,String lastMessageText,String lastMessageSender, String lastMessageTime,int numberOfUsers){
         this.uid=uid;
         this.name=name;
         this.imageUri=imageUri;
-        this.lastMessage=lastMessage;
+        this.lastMessageText=lastMessageText;
         this.lastMessageSender=lastMessageSender;
         this.lastMessageTime=lastMessageTime;
         this.numberOfUsers=numberOfUsers;
     }
+
+    public ChatObject(String uid, String name, String imageUri,String lastMessageText,String lastMessageSender, String lastMessageTime,int numberOfUsers, String lastMessageId){
+        this.uid=uid;
+        this.name=name;
+        this.imageUri=imageUri;
+        this.lastMessageText=lastMessageText;
+        this.lastMessageSender=lastMessageSender;
+        this.lastMessageTime=lastMessageTime;
+        this.numberOfUsers=numberOfUsers;
+        this.lastMessageId=lastMessageId;
+    }
+
+
+
 
     public String getName() {
         return name;
@@ -60,8 +74,12 @@ public class ChatObject {
     }
 
 
-    public String getLastMessage() {
-        return lastMessage;
+    public String getLastMessageText() {
+        return lastMessageText;
+    }
+
+    public String getLastMessageId() {
+        return lastMessageId;
     }
 
     public String getLastMessageSender() {

@@ -52,6 +52,16 @@ public class MessageObject {
         this.messageId=messageId;
     }
 
+    public MessageObject() {
+                messageId  =null;
+                text=null;
+                senderId=null;
+                senderName=null;
+                imageUri=null;
+                time=null;
+                date=null;
+    }
+
 
     public String getMessageId() {
         return messageId;

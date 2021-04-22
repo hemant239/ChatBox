@@ -163,7 +163,7 @@ public class AllChatsActivity extends AppCompatActivity {
                 if(snapshot.exists()){
                     final String[] name = {""};
                     String imageUri="";
-                    String lastMessageId;
+                    final String lastMessageId;
                     String lastSenderId;
                     final String[] lastSenderName = {""};
                     String lastMessageText="Photo";
@@ -209,7 +209,7 @@ public class AllChatsActivity extends AppCompatActivity {
                                     if(thisSnapshot.exists()){
                                         if(thisSnapshot.getValue()!=null){
                                             lastSenderName[0] = Objects.requireNonNull(thisSnapshot.getValue()).toString();
-                                            ChatObject chatObject=new ChatObject(key, name[0], finalImageUri, finalLastMessageText,lastSenderName[0], finalLastMessageTime, finalNumberOfUsers1);
+                                            ChatObject chatObject=new ChatObject(key, name[0], finalImageUri, finalLastMessageText,lastSenderName[0], finalLastMessageTime, finalNumberOfUsers1,lastMessageId);
                                             //Toast.makeText(getApplicationContext(),"chat is added to list",Toast.LENGTH_SHORT).show();
 
                                             int indexOfObject=chatList.indexOf(chatObject);
