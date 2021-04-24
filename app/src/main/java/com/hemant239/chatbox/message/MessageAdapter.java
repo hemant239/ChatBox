@@ -68,12 +68,12 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         RecyclerView.LayoutParams layoutParams= new RecyclerView.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         view.setLayoutParams(layoutParams);
 
-
         return new MessageAdapter.ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull MessageAdapter.ViewHolder holder, final int position) {
+
 
         final MessageObject curMessage=messageList.get(position);
         if(curMessage.messageId  ==null && curMessage.text==null &&
@@ -161,17 +161,13 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
             }
 
             if (position!=messageList.size()-1 && !curMessage.getDate().equals(messageList.get(position + 1).getDate())) {
-                holder.messageDate.setText(messageList.get(position+1).getDate());
-                holder.messageDate.setVisibility(View.VISIBLE);
+                holder.messageDateLower.setText(messageList.get(position+1).getDate());
+                holder.messageDateLower.setVisibility(View.VISIBLE);
             }
 
             if(position==0){
-                RelativeLayout.LayoutParams layoutParams1= (RelativeLayout.LayoutParams) holder.relativeLayout.getLayoutParams();
-                layoutParams1.addRule(RelativeLayout.BELOW,R.id.DateView);
-                RelativeLayout.LayoutParams layoutParams2= (RelativeLayout.LayoutParams) holder.messageDate.getLayoutParams();
-                layoutParams2.removeRule(RelativeLayout.BELOW);
-                holder.messageDate.setText(curMessage.getDate());
-                holder.messageDate.setVisibility(View.VISIBLE);
+                holder.messageDateUpper.setText(curMessage.getDate());
+                holder.messageDateUpper.setVisibility(View.VISIBLE);
             }
 
         }
@@ -197,7 +193,8 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         TextView    messageText,
                     messageSender,
                     messageTime,
-                    messageDate;
+                    messageDateUpper,
+                    messageDateLower;
 
         ImageView mediaImage;
 
@@ -210,7 +207,8 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
             messageText=itemView.findViewById(R.id.messageText);
             messageTime=itemView.findViewById(R.id.messageTime);
             mediaImage=itemView.findViewById(R.id.mediaImage);
-            messageDate=itemView.findViewById(R.id.DateView);
+            messageDateUpper=itemView.findViewById(R.id.DateViewUpper);
+            messageDateLower=itemView.findViewById(R.id.DateViewLower);
             relativeLayout=itemView.findViewById(R.id.parentRelativeLayout);
         }
     }

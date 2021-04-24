@@ -152,8 +152,8 @@ public class CreateNewChatActivity extends AppCompatActivity {
             }
 
 
-
-            if(name != null && userDisplayed.get(phoneNumber)==null){
+            String curUserPhone=FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
+            if(name != null && userDisplayed.get(phoneNumber)==null && !phoneNumber.equals(curUserPhone)){
                 userDisplayed.put(phoneNumber,true);
                 UserObject contactUser=new UserObject(name,phoneNumber);
                 checkUserDetails(contactUser);

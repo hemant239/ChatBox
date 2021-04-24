@@ -17,5 +17,6 @@ public class OfflineActivity extends AppCompatActivity {
         FirebaseDatabase.getInstance().setPersistenceEnabled(true);
         Intent intent=new Intent(this,LogInActivity.class);
         startActivity(intent);
+        finish();
     }
 }

@@ -368,6 +368,9 @@ public class SpecificChatActivity extends AppCompatActivity {
                         messageList.add(newMessage);
                         mMessageListLayoutManager.scrollToPosition(messageList.size()-1);
                         mMessageAdapter.notifyItemInserted(messageList.size()-1);
+                        if(messageList.size()>1) {
+                            mMessageAdapter.notifyItemChanged(messageList.size() - 2);
+                        }
                     }
                     else{
                         messageList.set(index,newMessage);
