@@ -3,9 +3,17 @@ package com.hemant239.chatbox.chat;
 import java.util.Objects;
 
 public class ChatObject {
-    String uid, name , imageUri,lastMessageText,lastMessageSender,lastMessageTime, lastMessageId;
+    private String  uid,
+            name,
+            imageUri,
+            lastMessageText,
+            lastMessageSender,
+            lastMessageTime,
+            lastMessageId;
 
-    int numberOfUsers;
+    private int numberOfUsers;
+
+    private boolean isSingleChat;
 
 
     public ChatObject(String uid){
@@ -37,6 +45,15 @@ public class ChatObject {
         this.lastMessageTime=lastMessageTime;
     }
 
+    public ChatObject(String uid, String name, String imageUri, int numberOfUsers, boolean isSingleChat) {
+        this.uid=uid;
+        this.name=name;
+        this.imageUri=imageUri;
+        this.numberOfUsers=numberOfUsers;
+        this.isSingleChat=isSingleChat;
+    }
+
+
     public ChatObject(String uid, String name, String imageUri,String lastMessageText,String lastMessageSender, String lastMessageTime,int numberOfUsers){
         this.uid=uid;
         this.name=name;
@@ -56,6 +73,18 @@ public class ChatObject {
         this.lastMessageTime=lastMessageTime;
         this.numberOfUsers=numberOfUsers;
         this.lastMessageId=lastMessageId;
+    }
+
+    public ChatObject(String uid, String name, String imageUri,String lastMessageText,String lastMessageSender, String lastMessageTime,int numberOfUsers, String lastMessageId,boolean isSingleChat){
+        this.uid=uid;
+        this.name=name;
+        this.imageUri=imageUri;
+        this.lastMessageText=lastMessageText;
+        this.lastMessageSender=lastMessageSender;
+        this.lastMessageTime=lastMessageTime;
+        this.numberOfUsers=numberOfUsers;
+        this.lastMessageId=lastMessageId;
+        this.isSingleChat=isSingleChat;
     }
 
 
@@ -94,6 +123,9 @@ public class ChatObject {
         return numberOfUsers;
     }
 
+    public boolean isSingleChat() {
+        return isSingleChat;
+    }
 
     @Override
     public boolean equals(Object o) {

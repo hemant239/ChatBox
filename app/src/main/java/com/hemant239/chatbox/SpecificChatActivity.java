@@ -75,6 +75,8 @@ public class SpecificChatActivity extends AppCompatActivity {
 
     String lastMessageId;
 
+    boolean isSingleChat;
+
     int numberOfUsers;
 
 
@@ -102,6 +104,8 @@ public class SpecificChatActivity extends AppCompatActivity {
         final String imageUri=(getIntent().getStringExtra("Image Uri"));
         numberOfUsers=getIntent().getIntExtra("Number Of Users",0);
         lastMessageId=getIntent().getStringExtra("Last Message ID");
+        isSingleChat=getIntent().getBooleanExtra("is single chat",false);
+        key=getIntent().getStringExtra("Chat Key");
 
 
         chatName.setText(name);
@@ -125,7 +129,7 @@ public class SpecificChatActivity extends AppCompatActivity {
 
         mediaAdded="";
 
-        key=getIntent().getStringExtra("Chat Key");
+
 
         getMessageList(key);
 
@@ -353,16 +357,14 @@ public class SpecificChatActivity extends AppCompatActivity {
     }
 
     private void getMessageUserData(final String messageKey, final String text, final String imageUri, final String senderId, final String time, final String date, final boolean isNewMessage, final int index) {
-        DatabaseReference mUserDB=FirebaseDatabase.getInstance().getReference().child("Users").child(senderId);
-        mUserDB.addValueEventListener(new ValueEventListener() {
+        DatabaseReference mUserDB=FirebaseDatabase.getInstance().getReference().child("Users").child(senderId).child("Name");
+        mUserDB.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
-                    String senderName= Objects.requireNonNull(snapshot.child("Name").getValue()).toString();
+                    String senderName= Objects.requireNonNull(snapshot.getValue()).toString();
 
                     MessageObject newMessage=new MessageObject(messageKey,text,imageUri,senderId,senderName,time,date);
-
-
 
                     if(isNewMessage){
                         messageList.add(newMessage);

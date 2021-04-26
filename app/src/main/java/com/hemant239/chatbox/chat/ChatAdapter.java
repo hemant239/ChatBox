@@ -82,13 +82,12 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
             @Override
             public void onClick(View v) {
                 Intent intent=new Intent(context,SpecificChatActivity.class);
-
-                //intent.putExtra("Chat Adapter", (Parcelable) ChatAdapter.this);
                 intent.putExtra("Chat Key",mChatList.get(position).getUid());
                 intent.putExtra("Chat Name",mChatList.get(position).getName());
                 intent.putExtra("Image Uri",mChatList.get(position).getImageUri());
                 intent.putExtra("Number Of Users",mChatList.get(position).getNumberOfUsers());
                 intent.putExtra("Last Message ID",mChatList.get(position).getLastMessageId());
+                intent.putExtra("is single chat",mChatList.get(position).isSingleChat());
                 context.startActivity(intent);
                 ((AllChatsActivity)context).finish();
             }

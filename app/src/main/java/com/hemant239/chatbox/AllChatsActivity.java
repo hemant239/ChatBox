@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.BoringLayout;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -57,6 +58,8 @@ public class AllChatsActivity extends AppCompatActivity {
         if(getIntent().getBooleanExtra("First time",false)){
             requestUserPermission();
         }
+
+
 
         chatList=new ArrayList<>();
         initializeViews();
@@ -155,8 +158,6 @@ public class AllChatsActivity extends AppCompatActivity {
 
     private void getChatDetails(final String key) {
         mChatDB=FirebaseDatabase.getInstance().getReference().child("Chats").child(key);
-
-
         mChatDB.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -169,22 +170,33 @@ public class AllChatsActivity extends AppCompatActivity {
                     String lastMessageText="Photo";
                     String lastMessageTime="";
                     int numberOfUsers=0;
+                    boolean isSingleChat=false;
 
 
-                    //Toast.makeText(getApplicationContext(),"on Data Change is called",Toast.LENGTH_SHORT).show();
-
-                    //TODO: add toast messages to check if it runs for other chats.
+                    String curUserKey=FirebaseAuth.getInstance().getCurrentUser().getUid();
+                    if(snapshot.child("info").child("isSingleChat").getValue()!=null){
+                        isSingleChat= true;
+                    }
 
                     if(snapshot.child("info").child("Name").getValue()!=null){
                         name[0] = Objects.requireNonNull(snapshot.child("info").child("Name").getValue()).toString();
                     }
 
-                    if(snapshot.child("info").child("Number Of Users").getValue()!=null){
-                        numberOfUsers =Integer.parseInt(Objects.requireNonNull(snapshot.child("info").child("Number Of Users").getValue()).toString());
+                    if(isSingleChat && snapshot.child("info").child(curUserKey).child("Name").getValue()!=null){
+                        name[0] =snapshot.child("info").child(curUserKey).child("Name").getValue().toString();
                     }
 
                     if(snapshot.child("info").child("Chat Profile Image Uri").getValue()!=null){
                         imageUri= Objects.requireNonNull(snapshot.child("info").child("Chat Profile Image Uri").getValue()).toString();
+                    }
+
+                    if(isSingleChat && snapshot.child("info").child(curUserKey).child("Chat Profile Image Uri").getValue()!=null){
+                        imageUri =snapshot.child("info").child(curUserKey).child("Chat Profile Image Uri").getValue().toString();
+                    }
+
+
+                    if(snapshot.child("info").child("Number Of Users").getValue()!=null){
+                        numberOfUsers =Integer.parseInt(Objects.requireNonNull(snapshot.child("info").child("Number Of Users").getValue()).toString());
                     }
                     if(snapshot.child("info").child("Last Message").getValue()!=null){
                         lastMessageId= Objects.requireNonNull(snapshot.child("info").child("Last Message").getValue()).toString();
@@ -203,13 +215,14 @@ public class AllChatsActivity extends AppCompatActivity {
                             final String finalLastMessageText = lastMessageText;
                             final String finalLastMessageTime = lastMessageTime;
                             final int finalNumberOfUsers1 = numberOfUsers;
+                            final boolean finalIsSingleChat = isSingleChat;
                             mUserDB.addValueEventListener(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(@NonNull DataSnapshot thisSnapshot) {
                                     if(thisSnapshot.exists()){
                                         if(thisSnapshot.getValue()!=null){
                                             lastSenderName[0] = Objects.requireNonNull(thisSnapshot.getValue()).toString();
-                                            ChatObject chatObject=new ChatObject(key, name[0], finalImageUri, finalLastMessageText,lastSenderName[0], finalLastMessageTime, finalNumberOfUsers1,lastMessageId);
+                                            ChatObject chatObject=new ChatObject(key, name[0], finalImageUri, finalLastMessageText,lastSenderName[0], finalLastMessageTime, finalNumberOfUsers1,lastMessageId, finalIsSingleChat);
                                             //Toast.makeText(getApplicationContext(),"chat is added to list",Toast.LENGTH_SHORT).show();
 
                                             int indexOfObject=chatList.indexOf(chatObject);
@@ -236,7 +249,7 @@ public class AllChatsActivity extends AppCompatActivity {
                         }
 
                         else{
-                            ChatObject chatObject=new ChatObject(key, name[0],imageUri,numberOfUsers);
+                            ChatObject chatObject=new ChatObject(key, name[0],imageUri,numberOfUsers,isSingleChat);
                             chatList.add(chatObject);
                             //Toast.makeText(getApplicationContext(),"chat is added to list",Toast.LENGTH_SHORT).show();
                             mChatListAdapter.notifyItemInserted(chatList.size()-1);
@@ -247,7 +260,7 @@ public class AllChatsActivity extends AppCompatActivity {
                     }
 
                     else{
-                        ChatObject chatObject=new ChatObject(key, name[0],imageUri,numberOfUsers);
+                        ChatObject chatObject=new ChatObject(key, name[0],imageUri,numberOfUsers,isSingleChat);
                         chatList.add(chatObject);
                         //Toast.makeText(getApplicationContext(),"chat is added to list",Toast.LENGTH_SHORT).show();
                         mChatListAdapter.notifyItemInserted(chatList.size()-1);
@@ -297,12 +310,18 @@ public class AllChatsActivity extends AppCompatActivity {
         }
     }
 
-    private void createNewChat() {
+    private void createNewGroup() {
         Intent intent=new Intent(this,CreateNewChatActivity.class);
+        intent.putExtra("isSingleChatActivity",false);
         startActivity(intent);
         finish();
     }
-
+    private void singleChats() {
+        Intent intent=new Intent(this,CreateNewChatActivity.class);
+        intent.putExtra("isSingleChatActivity",true);
+        startActivity(intent);
+        finish();
+    }
     private void logOut() {
 
         FirebaseAuth.getInstance().signOut();
@@ -331,13 +350,17 @@ public class AllChatsActivity extends AppCompatActivity {
                 logOut();
                 break;
 
-            case R.id.createNewChatMenu:
-                createNewChat();
+            case R.id.createNewGroupMenu:
+                createNewGroup();
                 break;
 
 
             case R.id.changeProfilePictureMenu:
                 openGallery();
+                break;
+
+            case R.id.singleChatsMenu:
+                singleChats();
                 break;
 
 
@@ -348,6 +371,8 @@ public class AllChatsActivity extends AppCompatActivity {
         }
         return true;
     }
+
+
 
 
 }

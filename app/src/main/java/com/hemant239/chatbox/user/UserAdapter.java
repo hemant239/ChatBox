@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.hemant239.chatbox.ImageViewActivity;
+import com.hemant239.chatbox.CreateSingleChatActivity;
 import com.hemant239.chatbox.R;
 
 import java.util.ArrayList;
@@ -25,12 +26,15 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
     ArrayList<UserObject> mUserList;
 
+    boolean isSingleChatActivity;
+
     Context context;
 
 
-    public UserAdapter(ArrayList<UserObject> userList, Context context){
+    public UserAdapter(ArrayList<UserObject> userList, Context context,boolean isSingleChatActivity){
         mUserList=userList;
         this.context=context;
+        this.isSingleChatActivity=isSingleChatActivity;
     }
 
 
@@ -65,12 +69,28 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
             Glide.with(context).load(Uri.parse(mUserList.get(position).getProfileImageUri())).into(holder.mProfilePhoto);
         }
 
-        holder.isSelected.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mUserList.get(position).setSelected(isChecked);
-            }
-        });
+        if(!isSingleChatActivity) {
+            holder.isSelected.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    mUserList.get(position).setSelected(isChecked);
+                }
+            });
+        }
+        else{
+            holder.isSelected.setVisibility(View.GONE);
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent=new Intent(context, CreateSingleChatActivity.class);
+                    intent.putExtra("User Key",mUserList.get(position).getUid());
+                    intent.putExtra("User Name",mUserList.get(position).getName());
+                    intent.putExtra("User image",mUserList.get(position).getProfileImageUri());
+                    context.startActivity(intent);
+                }
+            });
+        }
+
     }
 
 
@@ -93,6 +113,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
         TextView    mName,
                     mPhoneNumber;
+
 
         ImageView mProfilePhoto;
 

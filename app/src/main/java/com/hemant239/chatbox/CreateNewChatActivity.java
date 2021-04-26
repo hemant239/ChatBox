@@ -1,5 +1,6 @@
 package com.hemant239.chatbox;
 
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -34,8 +35,10 @@ import java.util.Objects;
 
 public class CreateNewChatActivity extends AppCompatActivity {
 
-    Button mCancelButton,mCreateChat;
+    Button mCreateChat;
     EditText mChatName;
+
+    static Context context;
 
     RecyclerView mUserList;
     RecyclerView.Adapter<UserAdapter.ViewHolder> mUserListAdapter;
@@ -45,6 +48,8 @@ public class CreateNewChatActivity extends AppCompatActivity {
     ArrayList<UserObject> userList;
 
     HashMap<String,Boolean> userDisplayed;
+
+    boolean isSingleChatActivity;
     //this is to make sure that if the user has 2 contacts with same number,only one of them is displayed.
 
     @Override
@@ -57,35 +62,35 @@ public class CreateNewChatActivity extends AppCompatActivity {
         contactsList=new ArrayList<>();
         userDisplayed= new HashMap<>();
 
+        context=this;
+
+        isSingleChatActivity=getIntent().getBooleanExtra("isSingleChatActivity",false);
 
         initializeViews();
         initializeRecyclerViews();
 
-        mCancelButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(getApplicationContext(),AllChatsActivity.class));
-            }
-        });
+        if(isSingleChatActivity){
+            mCreateChat.setVisibility(View.GONE);
+            mChatName.setVisibility(View.GONE);
+        }
 
-
-
-        mCreateChat.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(mChatName!=null) {
-                    String s = mChatName.getText().toString().trim();
-                    if (s.length() != 0) {
-                        createChat();
-                        startActivity(new Intent(getApplicationContext(),AllChatsActivity.class));
-                        finish();
-                    }
-                    else {
-                        Toast.makeText(getApplicationContext(), "Give the name to the chat mf", Toast.LENGTH_SHORT).show();
+        if(!isSingleChatActivity) {
+            mCreateChat.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mChatName != null) {
+                        String s = mChatName.getText().toString().trim();
+                        if (s.length() != 0) {
+                            createChat();
+                            startActivity(new Intent(getApplicationContext(), AllChatsActivity.class));
+                            finish();
+                        } else {
+                            Toast.makeText(getApplicationContext(), "Give the name to the chat mf", Toast.LENGTH_SHORT).show();
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
 
         getContactList();
     }
@@ -164,19 +169,6 @@ public class CreateNewChatActivity extends AppCompatActivity {
         cursor.close();
     }
 
-    private String getIsoPrefix() {
-
-        String iso="";
-
-        TelephonyManager telephonyManager=(TelephonyManager)getApplicationContext().getSystemService(TELEPHONY_SERVICE);
-        if(telephonyManager!=null){
-            iso=CountryToPhonePrefix.prefixFor(telephonyManager.getNetworkCountryIso());
-        }
-
-        return iso;
-
-    }
-
     private void checkUserDetails(final UserObject contactUser) {
         DatabaseReference mUserDB= FirebaseDatabase.getInstance().getReference().child("Users");
         Query query=mUserDB.orderByChild("Phone Number").equalTo(contactUser.getPhoneNumber());
@@ -211,12 +203,30 @@ public class CreateNewChatActivity extends AppCompatActivity {
 
     }
 
+    private String getIsoPrefix() {
+
+        String iso="";
+
+        TelephonyManager telephonyManager=(TelephonyManager)getApplicationContext().getSystemService(TELEPHONY_SERVICE);
+        if(telephonyManager!=null){
+            iso=CountryToPhonePrefix.prefixFor(telephonyManager.getNetworkCountryIso());
+        }
+
+        return iso;
+
+    }
+
+    private void initializeViews() {
+        mCreateChat = findViewById(R.id.newChat);
+        mChatName=findViewById(R.id.chatName);
+
+    }
     private void initializeRecyclerViews() {
         mUserList=findViewById(R.id.recyclerViewList);
         mUserList.setHasFixedSize(false);
         mUserList.setNestedScrollingEnabled(false);
 
-        mUserListAdapter= new UserAdapter(userList,this);
+        mUserListAdapter= new UserAdapter(userList,this, isSingleChatActivity);
         mUserList.setAdapter(mUserListAdapter);
 
         mUserListLayoutManager=new LinearLayoutManager(getApplicationContext(),RecyclerView.VERTICAL,false);
@@ -227,13 +237,5 @@ public class CreateNewChatActivity extends AppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
         startActivity(new Intent(getApplicationContext(),AllChatsActivity.class));
-    }
-
-    private void initializeViews() {
-        mCancelButton=findViewById(R.id.cancelButton);
-        mCreateChat = findViewById(R.id.newChat);
-
-        mChatName=findViewById(R.id.chatName);
-
     }
 }

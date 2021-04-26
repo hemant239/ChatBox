@@ -20,10 +20,6 @@ public class LoadingActivity extends AppCompatActivity {
         initializeViews();
 
         context=this;
-
-
-
-
         mCancelUpload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

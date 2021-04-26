@@ -5,9 +5,14 @@
 
     <item android:title="Create New Chat"
         app:showAsAction="ifRoom"
-        android:id="@+id/createNewChatMenu"
+        android:id="@+id/createNewGroupMenu"
         android:icon="@drawable/ic_baseline_add_24"/>
 
+
+    <item android:title="All Contacts"
+        app:showAsAction="never"
+        android:id="@+id/singleChatsMenu"
+        />
 
 
     <item android:title="Change Profile Photo"
