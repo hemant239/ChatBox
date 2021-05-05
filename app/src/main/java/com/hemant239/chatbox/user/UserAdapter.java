@@ -58,16 +58,16 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
         if(!mUserList.get(position).getProfileImageUri().equals("")){
             holder.mProfilePhoto.setClipToOutline(true);
-            holder.mProfilePhoto.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent =new Intent(context, ImageViewActivity.class);
-                    intent.putExtra("URI",mUserList.get(position).getProfileImageUri());
-                    context.startActivity(intent);
-                }
-            });
             Glide.with(context).load(Uri.parse(mUserList.get(position).getProfileImageUri())).into(holder.mProfilePhoto);
         }
+        holder.mProfilePhoto.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent =new Intent(context, ImageViewActivity.class);
+                intent.putExtra("URI",mUserList.get(position).getProfileImageUri());
+                context.startActivity(intent);
+            }
+        });
 
         if(!isSingleChatActivity) {
             holder.isSelected.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {

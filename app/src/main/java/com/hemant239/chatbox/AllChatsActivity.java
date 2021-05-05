@@ -16,6 +16,7 @@ import android.text.BoringLayout;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import android.view.View;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -59,12 +60,21 @@ public class AllChatsActivity extends AppCompatActivity {
             requestUserPermission();
         }
 
-
-
         chatList=new ArrayList<>();
         initializeViews();
         initializeRecyclerViews();
         getChatList();
+
+
+        findViewById(R.id.whatsApp).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String url = "https://api.whatsapp.com/send?phone=+919081005965";
+                Intent intent=new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(url));
+                startActivity(intent);
+            }
+        });
     }
 
     final int CHANGE_PROFILE_PHOTO_CODE=1;
@@ -75,6 +85,7 @@ public class AllChatsActivity extends AppCompatActivity {
         intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(intent,"Select an image"),CHANGE_PROFILE_PHOTO_CODE);
     }
+
 
 
     @Override
@@ -365,14 +376,12 @@ public class AllChatsActivity extends AppCompatActivity {
 
 
             default:
-                Toast.makeText(getApplicationContext(),"sahi sahi select kar, zyaada dimaag mat chala",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(),"please select a valid option",Toast.LENGTH_SHORT).show();
                 break;
 
         }
         return true;
     }
-
-
 
 
 }

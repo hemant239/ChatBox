@@ -66,17 +66,18 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
 
         if(!mChatList.get(position).getImageUri().equals("")){
             holder.mChatImage.setClipToOutline(true);
-            holder.mChatImage.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent =new Intent(context, ImageViewActivity.class);
-                    intent.putExtra("URI",mChatList.get(position).getImageUri());
-                    context.startActivity(intent);
-                }
-            });
+
             Glide.with(context).load(Uri.parse(mChatList.get(position).getImageUri())).into(holder.mChatImage);
 
         }
+        holder.mChatImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent =new Intent(context, ImageViewActivity.class);
+                intent.putExtra("URI",mChatList.get(position).getImageUri());
+                context.startActivity(intent);
+            }
+        });
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override

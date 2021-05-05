@@ -33,7 +33,6 @@ import java.util.concurrent.TimeUnit;
 public class LogInActivity extends AppCompatActivity {
 
     EditText    mPhoneNumber,
-                mName,
                 mVerificationCode;
 
     Button      mSend;
@@ -116,12 +115,14 @@ public class LogInActivity extends AppCompatActivity {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot snapshot) {
                                 if(!snapshot.exists()){
-                                    HashMap<String,Object> mapUserInfo=new HashMap<>();
-                                    mapUserInfo.put("Phone Number",mPhoneNumber.getText().toString());
-                                    mapUserInfo.put("Name",mName.getText().toString());
-                                    mUserDB.updateChildren(mapUserInfo);
+                                    mUserDB.child("Phone Number").setValue(mPhoneNumber.getText().toString());
+                                    startActivity(new Intent(getApplicationContext(),NewUserDetails.class));
+                                    finish();
                                 }
-                                userLoggedIn();
+                                else{
+                                    userLoggedIn();
+                                }
+
                             }
                             @Override
                             public void onCancelled(@NonNull DatabaseError error) {
@@ -158,7 +159,6 @@ public class LogInActivity extends AppCompatActivity {
 
     private void initializeViews() {
         mPhoneNumber        = findViewById(R.id.phoneNumber);
-        mName               = findViewById(R.id.name);
         mVerificationCode   = findViewById(R.id.verificationCode);
 
         mSend       = findViewById((R.id.buttonSend));

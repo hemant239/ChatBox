@@ -109,19 +109,22 @@ public class SpecificChatActivity extends AppCompatActivity {
 
 
         chatName.setText(name);
-        Glide.with(getApplicationContext()).load(Uri.parse(imageUri)).into(chatPhoto);
-
-
+        assert imageUri != null;
+        if(!imageUri.equals("")) {
+            Glide.with(getApplicationContext()).load(Uri.parse(imageUri)).into(chatPhoto);
+        }
         chatPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 Intent intent =new Intent(getApplicationContext(), ImageViewActivity.class);
                 intent.putExtra("URI",imageUri);
                 startActivity(intent);
 
             }
         });
+
+
+
 
         initializeViews();
         messageList=new ArrayList<>();
@@ -196,6 +199,8 @@ public class SpecificChatActivity extends AppCompatActivity {
                     assert data != null;
                     uploadTask=profileStorage.putFile(Objects.requireNonNull(data.getData()));
                     Intent intent =new Intent(getApplicationContext(),LoadingActivity.class);
+                    intent.putExtra("message","Your Image is being uploaded \\n please wait");
+                    intent.putExtra("isNewUser",false);
                     startActivityForResult(intent,CANCEL_UPLOAD_TASK);
                     uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                         @Override
