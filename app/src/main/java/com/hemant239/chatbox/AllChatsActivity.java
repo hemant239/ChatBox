@@ -66,15 +66,6 @@ public class AllChatsActivity extends AppCompatActivity {
         getChatList();
 
 
-        findViewById(R.id.whatsApp).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String url = "https://api.whatsapp.com/send?phone=+919081005965";
-                Intent intent=new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(url));
-                startActivity(intent);
-            }
-        });
     }
 
     final int CHANGE_PROFILE_PHOTO_CODE=1;

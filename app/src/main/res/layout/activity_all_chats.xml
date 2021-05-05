@@ -6,11 +6,6 @@
     tools:context=".AllChatsActivity"
     android:orientation="vertical">
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="WhatsApp"
-        android:id="@+id/whatsApp"/>
 
 
     <androidx.recyclerview.widget.RecyclerView
