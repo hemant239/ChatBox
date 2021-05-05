@@ -30,7 +30,6 @@ import com.hemant239.chatbox.utils.CountryToPhonePrefix;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Objects;
 
 public class CreateNewChatActivity extends AppCompatActivity {
@@ -157,7 +156,7 @@ public class CreateNewChatActivity extends AppCompatActivity {
             }
 
 
-            String curUserPhone=FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
+            String curUserPhone= Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getPhoneNumber();
             if(name != null && userDisplayed.get(phoneNumber)==null && !phoneNumber.equals(curUserPhone)){
                 userDisplayed.put(phoneNumber,true);
                 UserObject contactUser=new UserObject(name,phoneNumber);

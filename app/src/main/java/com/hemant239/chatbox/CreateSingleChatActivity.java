@@ -1,14 +1,13 @@
 package com.hemant239.chatbox;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -81,14 +80,14 @@ public class CreateSingleChatActivity extends AppCompatActivity {
                 if(snapshot.exists()){
 
                     if(snapshot.child("Name").getValue()!=null){
-                        curUserName=snapshot.child("Name").getValue().toString();
+                        curUserName= Objects.requireNonNull(snapshot.child("Name").getValue()).toString();
                     }
                     if(snapshot.child("Profile Image Uri").getValue()!=null){
-                        curUserImage=snapshot.child("Profile Image Uri").getValue().toString();
+                        curUserImage= Objects.requireNonNull(snapshot.child("Profile Image Uri").getValue()).toString();
                     }
 
                     if(snapshot.child("Single chats").child(userKey).getValue()!=null){
-                        openChat(snapshot.child("Single chats").child(userKey).getValue().toString());
+                        openChat(Objects.requireNonNull(snapshot.child("Single chats").child(userKey).getValue()).toString());
                     }
                     else{
                         createChat();
@@ -128,7 +127,7 @@ public class CreateSingleChatActivity extends AppCompatActivity {
         mChatInfo.put("user/"+userKey,true);
 
 
-
+        assert key != null;
         mChatDb.child(key).child("info").updateChildren(mChatInfo).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
@@ -154,13 +153,13 @@ public class CreateSingleChatActivity extends AppCompatActivity {
                     String lastMessageId="";
 
                     if(snapshot.child(curUserKey).child("Name").getValue()!=null){
-                        chatName=snapshot.child(curUserKey).child("Name").getValue().toString();
+                        chatName= Objects.requireNonNull(snapshot.child(curUserKey).child("Name").getValue()).toString();
                     }
                     if(snapshot.child(curUserKey).child("Chat Profile Image Uri").getValue()!=null){
-                        imageUri=snapshot.child(curUserKey).child("Chat Profile Image Uri").getValue().toString();
+                        imageUri= Objects.requireNonNull(snapshot.child(curUserKey).child("Chat Profile Image Uri").getValue()).toString();
                     }
                     if(snapshot.child("Last Message").getValue()!=null){
-                        lastMessageId=snapshot.child("Last Message").getValue().toString();
+                        lastMessageId= Objects.requireNonNull(snapshot.child("Last Message").getValue()).toString();
                     }
 
                     Intent intent=new Intent(getApplicationContext(),SpecificChatActivity.class);

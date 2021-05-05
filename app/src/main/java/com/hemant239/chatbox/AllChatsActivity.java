@@ -1,23 +1,20 @@
 package com.hemant239.chatbox;
 
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import android.Manifest;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.os.Bundle;
-import android.text.BoringLayout;
-import android.view.Menu;
-import android.view.MenuItem;
-
-import android.view.View;
-import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -175,7 +172,7 @@ public class AllChatsActivity extends AppCompatActivity {
                     boolean isSingleChat=false;
 
 
-                    String curUserKey=FirebaseAuth.getInstance().getCurrentUser().getUid();
+                    String curUserKey= Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
                     if(snapshot.child("info").child("isSingleChat").getValue()!=null){
                         isSingleChat= true;
                     }
@@ -185,7 +182,7 @@ public class AllChatsActivity extends AppCompatActivity {
                     }
 
                     if(isSingleChat && snapshot.child("info").child(curUserKey).child("Name").getValue()!=null){
-                        name[0] =snapshot.child("info").child(curUserKey).child("Name").getValue().toString();
+                        name[0] = Objects.requireNonNull(snapshot.child("info").child(curUserKey).child("Name").getValue()).toString();
                     }
 
                     if(snapshot.child("info").child("Chat Profile Image Uri").getValue()!=null){
@@ -193,7 +190,7 @@ public class AllChatsActivity extends AppCompatActivity {
                     }
 
                     if(isSingleChat && snapshot.child("info").child(curUserKey).child("Chat Profile Image Uri").getValue()!=null){
-                        imageUri =snapshot.child("info").child(curUserKey).child("Chat Profile Image Uri").getValue().toString();
+                        imageUri = Objects.requireNonNull(snapshot.child("info").child(curUserKey).child("Chat Profile Image Uri").getValue()).toString();
                     }
 
 

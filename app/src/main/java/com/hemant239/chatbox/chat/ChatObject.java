@@ -16,35 +16,6 @@ public class ChatObject {
     private boolean isSingleChat;
 
 
-    public ChatObject(String uid){
-        this.uid=uid;
-    }
-
-    public ChatObject(String uid,String name){
-        this.uid=uid;
-        this.name=name;
-    }
-
-    public ChatObject(String uid, String name, String imageUri){
-        this.uid=uid;
-        this.name=name;
-        this.imageUri=imageUri;
-    }
-    public ChatObject(String uid, String name, String imageUri,int numberOfUsers){
-        this.uid=uid;
-        this.name=name;
-        this.imageUri=imageUri;
-        this.numberOfUsers=numberOfUsers;
-    }
-    public ChatObject(String uid, String name, String imageUri,String lastMessageText,String lastMessageSender, String lastMessageTime){
-        this.uid=uid;
-        this.name=name;
-        this.imageUri=imageUri;
-        this.lastMessageText=lastMessageText;
-        this.lastMessageSender=lastMessageSender;
-        this.lastMessageTime=lastMessageTime;
-    }
-
     public ChatObject(String uid, String name, String imageUri, int numberOfUsers, boolean isSingleChat) {
         this.uid=uid;
         this.name=name;
@@ -53,27 +24,6 @@ public class ChatObject {
         this.isSingleChat=isSingleChat;
     }
 
-
-    public ChatObject(String uid, String name, String imageUri,String lastMessageText,String lastMessageSender, String lastMessageTime,int numberOfUsers){
-        this.uid=uid;
-        this.name=name;
-        this.imageUri=imageUri;
-        this.lastMessageText=lastMessageText;
-        this.lastMessageSender=lastMessageSender;
-        this.lastMessageTime=lastMessageTime;
-        this.numberOfUsers=numberOfUsers;
-    }
-
-    public ChatObject(String uid, String name, String imageUri,String lastMessageText,String lastMessageSender, String lastMessageTime,int numberOfUsers, String lastMessageId){
-        this.uid=uid;
-        this.name=name;
-        this.imageUri=imageUri;
-        this.lastMessageText=lastMessageText;
-        this.lastMessageSender=lastMessageSender;
-        this.lastMessageTime=lastMessageTime;
-        this.numberOfUsers=numberOfUsers;
-        this.lastMessageId=lastMessageId;
-    }
 
     public ChatObject(String uid, String name, String imageUri,String lastMessageText,String lastMessageSender, String lastMessageTime,int numberOfUsers, String lastMessageId,boolean isSingleChat){
         this.uid=uid;

@@ -3,9 +3,7 @@ package com.hemant239.chatbox;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -40,9 +38,7 @@ import com.hemant239.chatbox.message.MessageObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Objects;
@@ -311,7 +307,7 @@ public class SpecificChatActivity extends AppCompatActivity {
                 @Override
                 public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
 
-                    if(snapshot.exists() && !snapshot.getKey().equals(lastMessageId)){
+                    if(snapshot.exists() && !Objects.equals(snapshot.getKey(), lastMessageId)){
                         String senderId= Objects.requireNonNull(snapshot.child("Sender").getValue()).toString();
                         String text="";
                         String imageUri="";

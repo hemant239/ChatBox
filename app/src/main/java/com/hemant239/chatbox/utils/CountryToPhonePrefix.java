@@ -219,7 +219,6 @@ public class CountryToPhonePrefix {
         map.put("SM", "+378");
         map.put("SN", "+221");
         map.put("SO", "+252");
-        map.put("SO", "+252");
         map.put("SR", "+597");
         map.put("ST", "+239");
         map.put("SV", "+503");

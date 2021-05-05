@@ -3,29 +3,22 @@ package com.hemant239.chatbox.message;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.firebase.auth.FirebaseAuth;
 import com.hemant239.chatbox.ImageViewActivity;
 import com.hemant239.chatbox.R;
 
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Objects;
 
 public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHolder> {
@@ -38,18 +31,6 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
 
     Context context;
 
-    public MessageAdapter(ArrayList<MessageObject> messageList, Context context){
-        this.messageList=messageList;
-        this.context=context;
-        userKey= Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
-    }
-
-    public MessageAdapter(ArrayList<MessageObject> messageList, Context context, int numberOfUsers){
-        this.messageList=messageList;
-        this.context=context;
-        this.numberOfUsers=numberOfUsers;
-        userKey= Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
-    }
     public MessageAdapter(ArrayList<MessageObject> messageList, Context context, int numberOfUsers,float density){
         this.messageList=messageList;
         this.context=context;
