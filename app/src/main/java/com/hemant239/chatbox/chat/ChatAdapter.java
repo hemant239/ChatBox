@@ -52,7 +52,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
         holder.mChatName.setText(mChatList.get(position).getName());
 
 
-        if(mChatList.get(position).getNumberOfUsers()==2){
+        if(mChatList.get(position).getNumberOfUsers()==2 ||mChatList.get(position).isSingleChat() ){
             holder.mLastSender.setVisibility(View.GONE);
             holder.mColon.setVisibility(View.GONE);
         }
@@ -66,7 +66,6 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
 
         if(!mChatList.get(position).getImageUri().equals("")){
             holder.mChatImage.setClipToOutline(true);
-
             Glide.with(context).load(Uri.parse(mChatList.get(position).getImageUri())).into(holder.mChatImage);
 
         }
