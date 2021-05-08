@@ -30,6 +30,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
     float density;
 
     Context context;
+    RecyclerView mRecyclerView;
 
     public MessageAdapter(ArrayList<MessageObject> messageList, Context context, int numberOfUsers,float density){
         this.messageList=messageList;
@@ -38,7 +39,6 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         userKey= Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
         this.density=density;
     }
-
 
     @NonNull
     @Override
@@ -49,6 +49,8 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         RecyclerView.LayoutParams layoutParams= new RecyclerView.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         view.setLayoutParams(layoutParams);
 
+        mRecyclerView= (RecyclerView) parent;
+
         return new MessageAdapter.ViewHolder(view);
     }
 
@@ -57,6 +59,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
 
 
         final MessageObject curMessage=messageList.get(position);
+
         if(curMessage.messageId  ==null && curMessage.text==null &&
                 curMessage.senderId==null && curMessage.senderName==null &&
                 curMessage.imageUri==null && curMessage.time==null &&  curMessage.date==null){
@@ -79,21 +82,14 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
             }
 
 
-            if ((position != messageList.size() - 1 && curMessage.getSenderId().equals(messageList.get(position + 1).getSenderId()))
-                    || numberOfUsers <= 2 || curMessage.getSenderId().equals(userKey)) {
+            if(numberOfUsers == 1 || curMessage.getSenderId().equals(userKey)){
                 holder.messageSender.setVisibility(View.GONE);
             }
-
-            if(position>0 && position==messageList.size()-1){
-                MessageObject prevMessage=messageList.get(position-1);
-                if(prevMessage.messageId  ==null && prevMessage.text==null &&
-                        prevMessage.senderId==null && prevMessage.senderName==null &&
-                        prevMessage.imageUri==null && prevMessage.time==null &&  prevMessage.date==null){
-                }
-                else if(curMessage.getSenderId().equals(prevMessage.senderId)){
-                    holder.messageSender.setVisibility(View.GONE);
-                }
-
+            else if ((position != messageList.size() - 1 && curMessage.getDate().equals(messageList.get(position + 1).getDate()) && curMessage.getSenderId().equals(messageList.get(position + 1).getSenderId()))) {
+                int pos=holder.getAdapterPosition();
+                MessageAdapter.ViewHolder nextHolder= (ViewHolder) mRecyclerView.findViewHolderForAdapterPosition(pos+1);
+                if(nextHolder!=null && nextHolder.messageSender!=null)
+                    nextHolder.messageSender.setVisibility(View.GONE);
             }
 
 

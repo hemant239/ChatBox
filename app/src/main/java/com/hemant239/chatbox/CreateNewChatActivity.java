@@ -29,6 +29,8 @@ import com.hemant239.chatbox.user.UserObject;
 import com.hemant239.chatbox.utils.CountryToPhonePrefix;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -109,12 +111,13 @@ public class CreateNewChatActivity extends AppCompatActivity {
         HashMap<String,Object> mChatInfo=new HashMap<>();
 
         int noOfUsers=1;
+        Date date= Calendar.getInstance().getTime();
 
         for(UserObject user:userList){
             if(user.isSelected() && user.getUid()!=null){
                 noOfUsers++;
                 mChatInfo.put("user/"+user.getUid(), true);
-                mUserDB.child(user.getUid()).child("chat").child(key).setValue(true);
+                mUserDB.child(user.getUid()).child("chat").child(key).setValue(-date.getTime());
             }
         }
         mChatInfo.put("Name",mChatName.getText().toString());
@@ -125,7 +128,7 @@ public class CreateNewChatActivity extends AppCompatActivity {
         FirebaseUser mUser= FirebaseAuth.getInstance().getCurrentUser();
         if(mUser!=null) {
             mChatInfo.put("user/"+mUser.getUid(),true);
-            mUserDB.child(mUser.getUid()).child("chat").child(key).setValue(true);
+            mUserDB.child(mUser.getUid()).child("chat").child(key).setValue(-date.getTime());
         }
 
 

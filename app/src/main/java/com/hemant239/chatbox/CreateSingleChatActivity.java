@@ -18,6 +18,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -107,10 +109,13 @@ public class CreateSingleChatActivity extends AppCompatActivity {
         final String key= mChatDb.push().getKey();
         HashMap<String,Object> mUserInfo=new HashMap<>();
 
+
+        Date date= Calendar.getInstance().getTime();
+
         mUserInfo.put(userKey+"/Single chats/"+curUserKey,key);
         mUserInfo.put(curUserKey+"/Single chats/"+userKey,key);
-        mUserInfo.put(curUserKey+"/chat/"+key,true);
-        mUserInfo.put(userKey+"/chat/"+key,true);
+        mUserInfo.put(curUserKey+"/chat/"+key,-date.getTime());
+        mUserInfo.put(userKey+"/chat/"+key,-date.getTime());
 
         FirebaseDatabase.getInstance().getReference().child("Users").updateChildren(mUserInfo);
 

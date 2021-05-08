@@ -391,9 +391,11 @@ public class SpecificChatActivity extends AppCompatActivity {
     }
 
 //
-    private void sendMessage(String key) {
+    private void sendMessage(final String key) {
         final DatabaseReference mChatDb= FirebaseDatabase.getInstance().getReference().child("Chats").child(key);
-        FirebaseUser mUser= FirebaseAuth.getInstance().getCurrentUser();
+        final FirebaseUser mUser= FirebaseAuth.getInstance().getCurrentUser();
+
+        final DatabaseReference mUserDb=FirebaseDatabase.getInstance().getReference().child("Users");
 
         final HashMap<String,Object> newMessageMap=new HashMap<>();
 
@@ -417,8 +419,25 @@ public class SpecificChatActivity extends AppCompatActivity {
 
             SimpleDateFormat simpleDateFormatTime=new SimpleDateFormat("h:mm a");
             String time=simpleDateFormatTime.format(date);
-            SimpleDateFormat simpleDateFormatDate=new SimpleDateFormat("EEE, MMMM dd, yyyy");
+            SimpleDateFormat simpleDateFormatDate=new SimpleDateFormat("EEE, MMM dd, yyyy");
             String dateTemp=simpleDateFormatDate.format(date);
+
+            mChatDb.child("info").child("user").addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if(snapshot.exists()){
+                        for(DataSnapshot childSnapshot:snapshot.getChildren()){
+                            mUserDb.child(Objects.requireNonNull(childSnapshot.getKey())).child("chat").child(key).setValue(-date.getTime());
+                        }
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
+
 
             newMessageMap.put("Messages/"+messageId+"/timestamp",time.toUpperCase());
             newMessageMap.put("Messages/"+messageId+"/date",dateTemp.toUpperCase());

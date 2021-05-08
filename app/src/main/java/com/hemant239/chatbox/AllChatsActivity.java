@@ -121,10 +121,11 @@ public class AllChatsActivity extends AppCompatActivity {
 
         if(mUser!=null){
             mUserDB=mUserDB.child(mUser.getUid()).child("chat");
-            mUserDB.addChildEventListener(new ChildEventListener() {
+            mUserDB.orderByValue().addChildEventListener(new ChildEventListener() {
                 @Override
                 public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
                     if(snapshot.exists() && snapshot.getKey()!=null){
+                        //Toast.makeText(getApplicationContext(),snapshot.getKey(),Toast.LENGTH_SHORT).show();
                         getChatDetails(snapshot.getKey());
                     }
                 }
@@ -222,16 +223,20 @@ public class AllChatsActivity extends AppCompatActivity {
                                         if(thisSnapshot.getValue()!=null){
                                             lastSenderName[0] = Objects.requireNonNull(thisSnapshot.getValue()).toString();
                                             ChatObject chatObject=new ChatObject(key, name[0], finalImageUri, finalLastMessageText,lastSenderName[0], finalLastMessageTime, finalNumberOfUsers1,lastMessageId, finalIsSingleChat);
-                                            //Toast.makeText(getApplicationContext(),"chat is added to list",Toast.LENGTH_SHORT).show();
 
+                                            //Toast.makeText(getApplicationContext(),"added here"+name[0],Toast.LENGTH_SHORT).show();
                                             int indexOfObject=chatList.indexOf(chatObject);
                                             if(indexOfObject==-1){
                                                 chatList.add(chatObject);
                                                 mChatListAdapter.notifyItemInserted(chatList.size()-1);
                                             }
                                             else{
-                                                chatList.set(indexOfObject,chatObject);
-                                                mChatListAdapter.notifyItemChanged(indexOfObject);
+                                                //Toast.makeText(getApplicationContext(),"added here"+name[0]+" "+indexOfObject,Toast.LENGTH_SHORT).show();
+                                                chatList.remove(indexOfObject);
+                                                chatList.add(0,chatObject);
+                                                mChatListAdapter.notifyItemMoved(indexOfObject,0);
+//                                                mChatListAdapter.notifyItemInserted(0);
+                                                mChatListAdapter.notifyItemChanged(0);
                                             }
 
 
@@ -250,7 +255,6 @@ public class AllChatsActivity extends AppCompatActivity {
                         else{
                             ChatObject chatObject=new ChatObject(key, name[0],imageUri,numberOfUsers,isSingleChat);
                             chatList.add(chatObject);
-                            //Toast.makeText(getApplicationContext(),"chat is added to list",Toast.LENGTH_SHORT).show();
                             mChatListAdapter.notifyItemInserted(chatList.size()-1);
                         }
 
@@ -261,7 +265,6 @@ public class AllChatsActivity extends AppCompatActivity {
                     else{
                         ChatObject chatObject=new ChatObject(key, name[0],imageUri,numberOfUsers,isSingleChat);
                         chatList.add(chatObject);
-                        //Toast.makeText(getApplicationContext(),"chat is added to list",Toast.LENGTH_SHORT).show();
                         mChatListAdapter.notifyItemInserted(chatList.size()-1);
                     }
                 }
