@@ -18,18 +18,22 @@
         android:background="@color/colorAccent"
         android:fontFamily="sans-serif-black"
         android:textColor="#CA2F2F"
+        android:layout_alignParentTop="true"
         android:visibility="gone"/>
 
-    <androidx.recyclerview.widget.RecyclerView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/recyclerViewListMessages"
-        android:scrollbars="vertical"
-        android:layout_above="@id/inputLayout"
-        android:padding="5dp"
-        />
-
-
+        android:layout_height="match_parent"
+        android:layout_below="@+id/onScrollingDate"
+        android:layout_above="@id/inputLayout">
+        <androidx.recyclerview.widget.RecyclerView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/recyclerViewListMessages"
+            android:scrollbars="vertical"
+            android:padding="5dp"
+            />
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"

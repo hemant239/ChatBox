@@ -18,6 +18,7 @@ import com.bumptech.glide.Glide;
 import com.hemant239.chatbox.ImageViewActivity;
 import com.hemant239.chatbox.CreateSingleChatActivity;
 import com.hemant239.chatbox.R;
+import com.hemant239.chatbox.UserDetailsActivity;
 
 import java.util.ArrayList;
 
@@ -26,15 +27,16 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
     ArrayList<UserObject> mUserList;
 
-    boolean isSingleChatActivity;
+    boolean isSingleChatActivity,isGroupDetailsActivity;
 
     Context context;
 
 
-    public UserAdapter(ArrayList<UserObject> userList, Context context,boolean isSingleChatActivity){
+    public UserAdapter(ArrayList<UserObject> userList, Context context,boolean isSingleChatActivity,boolean isGroupDetailsActivity){
         mUserList=userList;
         this.context=context;
         this.isSingleChatActivity=isSingleChatActivity;
+        this.isGroupDetailsActivity=isGroupDetailsActivity;
     }
 
 
@@ -53,40 +55,53 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
-        holder.mName.setText(mUserList.get(position).getName());
-        holder.mPhoneNumber.setText(mUserList.get(position).getPhoneNumber());
 
-        if(!mUserList.get(position).getProfileImageUri().equals("")){
+        final UserObject user=mUserList.get(position);
+        holder.mName.setText(user.getName());
+        holder.mPhoneNumber.setText(user.getPhoneNumber());
+        holder.mStatus.setText(user.getStatus());
+
+        if(!user.getProfileImageUri().equals("")){
             holder.mProfilePhoto.setClipToOutline(true);
-            Glide.with(context).load(Uri.parse(mUserList.get(position).getProfileImageUri())).into(holder.mProfilePhoto);
+            Glide.with(context).load(Uri.parse(user.getProfileImageUri())).into(holder.mProfilePhoto);
         }
         holder.mProfilePhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent =new Intent(context, ImageViewActivity.class);
-                intent.putExtra("URI",mUserList.get(position).getProfileImageUri());
+                intent.putExtra("URI",user.getProfileImageUri());
                 context.startActivity(intent);
             }
         });
 
-        if(!isSingleChatActivity) {
-            holder.isSelected.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    mUserList.get(position).setSelected(isChecked);
-                }
-            });
-        }
-        else{
+        if(isSingleChatActivity) {
             holder.isSelected.setVisibility(View.GONE);
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Intent intent=new Intent(context, CreateSingleChatActivity.class);
-                    intent.putExtra("User Key",mUserList.get(position).getUid());
-                    intent.putExtra("User Name",mUserList.get(position).getName());
-                    intent.putExtra("User image",mUserList.get(position).getProfileImageUri());
+                    intent.putExtra("userObject",user);
                     context.startActivity(intent);
+                }
+            });
+
+        }
+        else if(isGroupDetailsActivity){
+            holder.isSelected.setVisibility(View.GONE);
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent=new Intent(context, UserDetailsActivity.class);
+                    intent.putExtra("userObject",user);
+                    context.startActivity(intent);
+                }
+            });
+        }
+        else{
+            holder.isSelected.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    user.setSelected(isChecked);
                 }
             });
         }
@@ -112,8 +127,8 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     public static class ViewHolder extends RecyclerView.ViewHolder{
 
         TextView    mName,
-                    mPhoneNumber;
-
+                    mPhoneNumber,
+                    mStatus;
 
         ImageView mProfilePhoto;
 
@@ -124,6 +139,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
             mName=itemView.findViewById(R.id.userName);
             mPhoneNumber=itemView.findViewById(R.id.userPhone);
+            mStatus=itemView.findViewById(R.id.userStatus);
 
             mProfilePhoto=itemView.findViewById(R.id.profileImage);
 

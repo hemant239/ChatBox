@@ -7,8 +7,8 @@
 
 
     <LinearLayout
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         android:background="@drawable/custom_image_background"
         >
 
@@ -44,6 +44,11 @@
             android:layout_height="wrap_content"
             android:id="@+id/userPhone"
             android:text="phone"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/userStatus"
+            android:text="Status"/>
 
     </LinearLayout>
 

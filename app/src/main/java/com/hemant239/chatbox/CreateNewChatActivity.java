@@ -1,7 +1,6 @@
 package com.hemant239.chatbox;
 
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.ContactsContract;
@@ -45,12 +44,13 @@ public class CreateNewChatActivity extends AppCompatActivity {
     RecyclerView.Adapter<UserAdapter.ViewHolder> mUserListAdapter;
     RecyclerView.LayoutManager mUserListLayoutManager;
 
-    ArrayList<UserObject> contactsList;
-    ArrayList<UserObject> userList;
+    ArrayList<UserObject>   contactsList,
+                            userList;
 
-    HashMap<String,Boolean> userDisplayed;
 
     boolean isSingleChatActivity;
+
+    HashMap<String,Boolean> userDisplayed;
     //this is to make sure that if the user has 2 contacts with same number,only one of them is displayed.
 
     @Override
@@ -83,7 +83,6 @@ public class CreateNewChatActivity extends AppCompatActivity {
                         String s = mChatName.getText().toString().trim();
                         if (s.length() != 0) {
                             createChat();
-                            startActivity(new Intent(getApplicationContext(), AllChatsActivity.class));
                             finish();
                         } else {
                             Toast.makeText(getApplicationContext(), "Give the name to the chat mf", Toast.LENGTH_SHORT).show();
@@ -100,9 +99,6 @@ public class CreateNewChatActivity extends AppCompatActivity {
 
         DatabaseReference mChatDB= FirebaseDatabase.getInstance().getReference().child("Chats");
         String key= mChatDB.push().getKey();
-
-
-
         DatabaseReference mUserDB=FirebaseDatabase.getInstance().getReference().child("Users");
 
         assert key != null;
@@ -140,7 +136,6 @@ public class CreateNewChatActivity extends AppCompatActivity {
     private void getContactList() {
 
         Cursor cursor=getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,null,null,null,null);
-        //Cursor cursor1=getContentResolver().query(ContactsContract.Contacts.CONTENT_URI,null,null,null,null);
 
         while(cursor!=null && cursor.moveToNext()){
             String phoneNumber=cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
@@ -164,7 +159,6 @@ public class CreateNewChatActivity extends AppCompatActivity {
                 userDisplayed.put(phoneNumber,true);
                 UserObject contactUser=new UserObject(name,phoneNumber);
                 checkUserDetails(contactUser);
-                
             }
         }
         assert cursor != null;
@@ -182,16 +176,21 @@ public class CreateNewChatActivity extends AppCompatActivity {
 
                     for(DataSnapshot childSnapshot: (snapshot.getChildren())){
                         if(childSnapshot.getKey()!=null && childSnapshot.child("Name").getValue()!=null  && childSnapshot.child("Phone Number").getValue()!=null ){
+
+                            String status="";
+                            if(childSnapshot.child("Status").getValue()!=null){
+                                status= Objects.requireNonNull(childSnapshot.child("Status").getValue()).toString();
+                            }
                             if(childSnapshot.child("Profile Image Uri").getValue()!=null){
-                                UserObject user=new UserObject(childSnapshot.getKey(),contactUser.getName(),contactUser.getPhoneNumber(), Objects.requireNonNull(childSnapshot.child("Profile Image Uri").getValue()).toString());
+                                UserObject user=new UserObject(childSnapshot.getKey(),contactUser.getName(),contactUser.getPhoneNumber(),status,Objects.requireNonNull(childSnapshot.child("Profile Image Uri").getValue()).toString());
                                 userList.add(user);
                             }
                             else{
-                                UserObject user=new UserObject(childSnapshot.getKey(),contactUser.getName(),contactUser.getPhoneNumber());
+                                UserObject user=new UserObject(childSnapshot.getKey(),contactUser.getName(),contactUser.getPhoneNumber(),status);
                                 userList.add(user);
                             }
 
-                            mUserListAdapter.notifyDataSetChanged();
+                            mUserListAdapter.notifyItemInserted(userList.size()-1);
                         }
                     }
                 }
@@ -228,16 +227,10 @@ public class CreateNewChatActivity extends AppCompatActivity {
         mUserList.setHasFixedSize(false);
         mUserList.setNestedScrollingEnabled(false);
 
-        mUserListAdapter= new UserAdapter(userList,this, isSingleChatActivity);
+        mUserListAdapter= new UserAdapter(userList,this, isSingleChatActivity,false);
         mUserList.setAdapter(mUserListAdapter);
 
         mUserListLayoutManager=new LinearLayoutManager(getApplicationContext(),RecyclerView.VERTICAL,false);
         mUserList.setLayoutManager(mUserListLayoutManager);
-    }
-
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        startActivity(new Intent(getApplicationContext(),AllChatsActivity.class));
     }
 }

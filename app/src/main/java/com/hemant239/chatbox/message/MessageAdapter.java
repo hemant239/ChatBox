@@ -57,8 +57,12 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
     @Override
     public void onBindViewHolder(@NonNull MessageAdapter.ViewHolder holder, final int position) {
 
-
         final MessageObject curMessage=messageList.get(position);
+        MessageObject nextMessage=new MessageObject();
+        if(position!=messageList.size()-1) {
+            nextMessage = messageList.get(position + 1);
+        }
+
 
         if(curMessage.messageId  ==null && curMessage.text==null &&
                 curMessage.senderId==null && curMessage.senderName==null &&
@@ -85,7 +89,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
             if(numberOfUsers == 1 || curMessage.getSenderId().equals(userKey)){
                 holder.messageSender.setVisibility(View.GONE);
             }
-            else if ((position != messageList.size() - 1 && curMessage.getDate().equals(messageList.get(position + 1).getDate()) && curMessage.getSenderId().equals(messageList.get(position + 1).getSenderId()))) {
+            else if ((position != messageList.size() - 1 && curMessage.getDate().equals(nextMessage.getDate()) && curMessage.getSenderId().equals(nextMessage.getSenderId()))) {
                 int pos=holder.getAdapterPosition();
                 MessageAdapter.ViewHolder nextHolder= (ViewHolder) mRecyclerView.findViewHolderForAdapterPosition(pos+1);
                 if(nextHolder!=null && nextHolder.messageSender!=null)
@@ -137,8 +141,8 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
                 holder.relativeLayout.setBackgroundResource(R.drawable.custom_background_message_receiver);
             }
 
-            if (position!=messageList.size()-1 && !curMessage.getDate().equals(messageList.get(position + 1).getDate())) {
-                holder.messageDateLower.setText(messageList.get(position+1).getDate());
+            if (position!=messageList.size()-1 && !curMessage.getDate().equals(nextMessage.getDate())) {
+                holder.messageDateLower.setText(nextMessage.getDate());
                 holder.messageDateLower.setVisibility(View.VISIBLE);
             }
 

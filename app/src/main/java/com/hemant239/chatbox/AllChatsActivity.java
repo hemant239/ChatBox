@@ -61,8 +61,6 @@ public class AllChatsActivity extends AppCompatActivity {
         initializeViews();
         initializeRecyclerViews();
         getChatList();
-
-
     }
 
     final int CHANGE_PROFILE_PHOTO_CODE=1;
@@ -125,7 +123,6 @@ public class AllChatsActivity extends AppCompatActivity {
                 @Override
                 public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
                     if(snapshot.exists() && snapshot.getKey()!=null){
-                        //Toast.makeText(getApplicationContext(),snapshot.getKey(),Toast.LENGTH_SHORT).show();
                         getChatDetails(snapshot.getKey());
                     }
                 }
@@ -194,7 +191,6 @@ public class AllChatsActivity extends AppCompatActivity {
                         imageUri = Objects.requireNonNull(snapshot.child("info").child(curUserKey).child("Chat Profile Image Uri").getValue()).toString();
                     }
 
-
                     if(snapshot.child("info").child("Number Of Users").getValue()!=null){
                         numberOfUsers =Integer.parseInt(Objects.requireNonNull(snapshot.child("info").child("Number Of Users").getValue()).toString());
                     }
@@ -223,19 +219,15 @@ public class AllChatsActivity extends AppCompatActivity {
                                         if(thisSnapshot.getValue()!=null){
                                             lastSenderName[0] = Objects.requireNonNull(thisSnapshot.getValue()).toString();
                                             ChatObject chatObject=new ChatObject(key, name[0], finalImageUri, finalLastMessageText,lastSenderName[0], finalLastMessageTime, finalNumberOfUsers1,lastMessageId, finalIsSingleChat);
-
-                                            //Toast.makeText(getApplicationContext(),"added here"+name[0],Toast.LENGTH_SHORT).show();
                                             int indexOfObject=chatList.indexOf(chatObject);
                                             if(indexOfObject==-1){
                                                 chatList.add(chatObject);
                                                 mChatListAdapter.notifyItemInserted(chatList.size()-1);
                                             }
                                             else{
-                                                //Toast.makeText(getApplicationContext(),"added here"+name[0]+" "+indexOfObject,Toast.LENGTH_SHORT).show();
                                                 chatList.remove(indexOfObject);
                                                 chatList.add(0,chatObject);
                                                 mChatListAdapter.notifyItemMoved(indexOfObject,0);
-//                                                mChatListAdapter.notifyItemInserted(0);
                                                 mChatListAdapter.notifyItemChanged(0);
                                             }
 
@@ -279,22 +271,7 @@ public class AllChatsActivity extends AppCompatActivity {
 
     }
 
-    private void initializeRecyclerViews() {
 
-        mChatList=findViewById(R.id.recyclerViewListChats);
-        mChatList.setHasFixedSize(false);
-        mChatList.setNestedScrollingEnabled(false);
-
-        mChatList.addItemDecoration(new DividerItemDecoration(mChatList.getContext(),DividerItemDecoration.VERTICAL));
-
-
-
-        mChatListAdapter= new ChatAdapter(chatList,this);
-        mChatList.setAdapter(mChatListAdapter);
-
-        mChatListLayoutManager=new LinearLayoutManager(getApplicationContext(),RecyclerView.VERTICAL,false);
-        mChatList.setLayoutManager(mChatListLayoutManager);
-    }
 
     private void requestUserPermission() {
         String[] permissions={Manifest.permission.INTERNET,Manifest.permission.READ_CONTACTS,Manifest.permission.ACCESS_NETWORK_STATE};
@@ -316,26 +293,38 @@ public class AllChatsActivity extends AppCompatActivity {
         Intent intent=new Intent(this,CreateNewChatActivity.class);
         intent.putExtra("isSingleChatActivity",false);
         startActivity(intent);
-        finish();
     }
     private void singleChats() {
         Intent intent=new Intent(this,CreateNewChatActivity.class);
         intent.putExtra("isSingleChatActivity",true);
         startActivity(intent);
-        finish();
     }
     private void logOut() {
-
         FirebaseAuth.getInstance().signOut();
         Intent intent=new Intent(this,LogInActivity.class);
         startActivity(intent);
         finish();
-
     }
 
 
 
     private void initializeViews() {
+    }
+    private void initializeRecyclerViews() {
+
+        mChatList=findViewById(R.id.recyclerViewListChats);
+        mChatList.setHasFixedSize(false);
+        mChatList.setNestedScrollingEnabled(false);
+
+        mChatList.addItemDecoration(new DividerItemDecoration(mChatList.getContext(),DividerItemDecoration.VERTICAL));
+
+
+
+        mChatListAdapter= new ChatAdapter(chatList,this);
+        mChatList.setAdapter(mChatListAdapter);
+
+        mChatListLayoutManager=new LinearLayoutManager(getApplicationContext(),RecyclerView.VERTICAL,false);
+        mChatList.setLayoutManager(mChatListLayoutManager);
     }
 
     @Override

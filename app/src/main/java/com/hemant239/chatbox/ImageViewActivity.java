@@ -21,7 +21,7 @@ public class ImageViewActivity extends AppCompatActivity {
 
         String uri=getIntent().getStringExtra("URI");
         assert uri != null;
-        if(!uri.toString().equals("")) {
+        if(!uri.equals("")) {
             Glide.with(this).load(Uri.parse(uri)).into(imageView);
         }
     }

@@ -17,6 +17,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.hemant239.chatbox.chat.ChatObject;
+import com.hemant239.chatbox.user.UserObject;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -40,9 +42,6 @@ public class CreateSingleChatActivity extends AppCompatActivity {
     DatabaseReference   mUserDb,
                         mChatDb;
 
-
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,9 +53,12 @@ public class CreateSingleChatActivity extends AppCompatActivity {
         curUserName="";
         curUserImage="";
 
-        userKey= getIntent().getStringExtra("User Key");
-        userName=getIntent().getStringExtra("User Name");
-        userImage=getIntent().getStringExtra("User image");
+        UserObject userObject= (UserObject) getIntent().getSerializableExtra("userObject");
+
+        assert userObject != null;
+        userKey=userObject.getUid();
+        userName=userObject.getName();
+        userImage=userObject.getProfileImageUri();
 
 
         mCancelButton.setOnClickListener(new View.OnClickListener() {
@@ -167,13 +169,11 @@ public class CreateSingleChatActivity extends AppCompatActivity {
                         lastMessageId= Objects.requireNonNull(snapshot.child("Last Message").getValue()).toString();
                     }
 
+
+                    ChatObject chatObject=new ChatObject(chatKey,chatName,imageUri,lastMessageId,1,true);
+
                     Intent intent=new Intent(getApplicationContext(),SpecificChatActivity.class);
-                    intent.putExtra("Chat Key",chatKey);
-                    intent.putExtra("Chat Name",chatName);
-                    intent.putExtra("Image Uri",imageUri);
-                    intent.putExtra("Number Of Users",1);
-                    intent.putExtra("Last Message ID",lastMessageId);
-                    intent.putExtra("is single chat",true);
+                    intent.putExtra("chatObject",chatObject);
                     startActivity(intent);
                     ((CreateNewChatActivity)CreateNewChatActivity.context).finish();
                     finish();

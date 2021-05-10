@@ -13,10 +13,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".UserDetails"></activity>
-        <activity android:name=".NewUserDetails" />
-        <activity
-            android:name=".CreateSingleChatActivity"
+        <activity android:name=".GroupDetailsActivity" />
+        <activity android:name=".UserDetailsActivity" />
+        <activity android:name=".NewUserDetailsActivity" />
+        <activity android:name=".CreateSingleChatActivity"
             android:theme="@style/AppTheme.Transparent.NoTitle" />
         <activity android:name=".OfflineActivity">
             <intent-filter>
@@ -25,16 +25,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".LoadingActivity"
+        <activity android:name=".LoadingActivity"
             android:theme="@style/AppTheme.Transparent.NoTitle" />
         <activity android:name=".ImageViewActivity" />
-        <activity
-            android:name=".SpecificChatActivity"
-            android:windowSoftInputMode="adjustPan" />
+        <activity android:name=".SpecificChatActivity"
+            android:windowSoftInputMode="adjustResize" />
         <activity android:name=".CreateNewChatActivity" />
         <activity android:name=".AllChatsActivity" />
-        <activity android:name=".LogInActivity"></activity>
+        <activity android:name=".LogInActivity" />
     </application>
 
 </manifest>

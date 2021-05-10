@@ -33,8 +33,10 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.hemant239.chatbox.chat.ChatObject;
 import com.hemant239.chatbox.message.MessageAdapter;
 import com.hemant239.chatbox.message.MessageObject;
+import com.hemant239.chatbox.user.UserObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -65,15 +67,13 @@ public class SpecificChatActivity extends AppCompatActivity {
     StorageReference profileStorage;
     UploadTask uploadTask;
 
-    String key;
+    String chatKey;
 
     String mediaAdded;
 
-    String lastMessageId;
+    ChatObject curChatObject;
 
-    boolean isSingleChat;
-
-    int numberOfUsers;
+    UserObject userObject;
 
 
     @Override
@@ -83,6 +83,8 @@ public class SpecificChatActivity extends AppCompatActivity {
 
         Objects.requireNonNull(getSupportActionBar()).setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
         getSupportActionBar().setDisplayShowCustomEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setCustomView(R.layout.app_bar_specific_chat);
         View view=getSupportActionBar().getCustomView();
 
@@ -96,24 +98,20 @@ public class SpecificChatActivity extends AppCompatActivity {
 
         chatPhoto.setClipToOutline(true);
 
-        String name=getIntent().getStringExtra("Chat Name");
-        final String imageUri=(getIntent().getStringExtra("Image Uri"));
-        numberOfUsers=getIntent().getIntExtra("Number Of Users",0);
-        lastMessageId=getIntent().getStringExtra("Last Message ID");
-        isSingleChat=getIntent().getBooleanExtra("is single chat",false);
-        key=getIntent().getStringExtra("Chat Key");
+        userObject=new UserObject();
+        curChatObject= (ChatObject) getIntent().getSerializableExtra("chatObject");
+        assert curChatObject != null;
+        chatKey=curChatObject.getUid();
 
-
-        chatName.setText(name);
-        assert imageUri != null;
-        if(!imageUri.equals("")) {
-            Glide.with(getApplicationContext()).load(Uri.parse(imageUri)).into(chatPhoto);
+        chatName.setText(curChatObject.getName());
+        if(curChatObject.getImageUri()!=null && !curChatObject.getImageUri().equals("")) {
+            Glide.with(getApplicationContext()).load(Uri.parse(curChatObject.getImageUri())).into(chatPhoto);
         }
         chatPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent =new Intent(getApplicationContext(), ImageViewActivity.class);
-                intent.putExtra("URI",imageUri);
+                intent.putExtra("URI",curChatObject.getImageUri());
                 startActivity(intent);
 
             }
@@ -121,22 +119,69 @@ public class SpecificChatActivity extends AppCompatActivity {
 
 
 
-
         initializeViews();
         messageList=new ArrayList<>();
         initializeRecyclerViews(density);
+
+        final String curUserKey= Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+
+
+        if(curChatObject.isSingleChat()){
+            FirebaseDatabase.getInstance().getReference().child("Chats/"+chatKey+"/info/user").addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if(snapshot.exists()){
+                        for(DataSnapshot childSnapshot:snapshot.getChildren()){
+                            if(!Objects.equals(childSnapshot.getKey(), curUserKey)){
+                                getUserDetails(childSnapshot.getKey());
+                            }
+                        }
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
+
+
+            chatName.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent=new Intent(getApplicationContext(), UserDetailsActivity.class);
+                    intent.putExtra("userObject",userObject);
+                    startActivity(intent);
+                }
+            });
+
+        }
+        else{
+            chatName.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent=new Intent(getApplicationContext(), GroupDetailsActivity.class);
+                    intent.putExtra("Key",curChatObject.getUid());
+                    intent.putExtra("Name",curChatObject.getName());
+                    intent.putExtra("Image",curChatObject.getImageUri());
+                    startActivity(intent);
+                }
+            });
+
+
+        }
 
         mediaAdded="";
 
 
 
-        getMessageList(key);
+        getMessageList(chatKey);
 
 
         mSendMessage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sendMessage(key);
+                sendMessage(chatKey);
             }
         });
 
@@ -156,12 +201,50 @@ public class SpecificChatActivity extends AppCompatActivity {
                 }
                 else if(newState==RecyclerView.SCROLL_STATE_DRAGGING){
                     int position=((LinearLayoutManager)mMessageListLayoutManager).findFirstCompletelyVisibleItemPosition();
-                    onDateScrolling.setText(messageList.get(position).getDate());
-                    onDateScrolling.setVisibility(View.VISIBLE);
+                    if(position>0) {
+                        onDateScrolling.setText(messageList.get(position).getDate());
+                        onDateScrolling.setVisibility(View.VISIBLE);
+                    }
                 }
             }
         });
     }
+
+    private void getUserDetails(final String userKey) {
+        FirebaseDatabase.getInstance().getReference().child("Users").child(userKey).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
+                    String userName="";
+                    String userPhone="";
+                    String userImage="";
+                    String userStatus="";
+
+                    if(snapshot.child("Name").getValue()!=null){
+                        userName= Objects.requireNonNull(snapshot.child("Name").getValue()).toString();
+                    }
+                    if(snapshot.child("Phone Number").getValue()!=null){
+                        userPhone= Objects.requireNonNull(snapshot.child("Phone Number").getValue()).toString();
+                    }if(snapshot.child("Profile Image Uri").getValue()!=null){
+                        userImage= Objects.requireNonNull(snapshot.child("Profile Image Uri").getValue()).toString();
+                    }
+                    if(snapshot.child("Status").getValue()!=null){
+                        userStatus= Objects.requireNonNull(snapshot.child("Status").getValue()).toString();
+                    }
+                    userObject=new UserObject(userKey,userName,userPhone,userStatus,userImage);
+
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+
+    }
+
     final int ADD_MEDIA_CODE=2;
     private void openGalleryToAddMedia() {
         Intent intent=new Intent();
@@ -182,6 +265,8 @@ public class SpecificChatActivity extends AppCompatActivity {
     }
 
 
+
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -189,8 +274,8 @@ public class SpecificChatActivity extends AppCompatActivity {
             switch (requestCode){
                 case CHANGE_CHAT_PHOTO_CODE:
 
-                    profileStorage= FirebaseStorage.getInstance().getReference().child("ChatProfilePhotos").child(key);
-                    final DatabaseReference mChatDb=FirebaseDatabase.getInstance().getReference().child("Chats").child(key).child("info");
+                    profileStorage= FirebaseStorage.getInstance().getReference().child("ChatProfilePhotos").child(chatKey);
+                    final DatabaseReference mChatDb=FirebaseDatabase.getInstance().getReference().child("Chats").child(chatKey).child("info");
 
                     assert data != null;
                     uploadTask=profileStorage.putFile(Objects.requireNonNull(data.getData()));
@@ -290,6 +375,7 @@ public class SpecificChatActivity extends AppCompatActivity {
                                 if(childSnapshot.child("date").getValue()!=null) {
                                     date = Objects.requireNonNull(childSnapshot.child("date").getValue()).toString();
                                 }
+
                                 getMessageUserData(childSnapshot.getKey(),text,imageUri,senderId,time,date,false,numberOfMessages);
                             }
                         }
@@ -307,7 +393,7 @@ public class SpecificChatActivity extends AppCompatActivity {
                 @Override
                 public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
 
-                    if(snapshot.exists() && !Objects.equals(snapshot.getKey(), lastMessageId)){
+                    if(snapshot.exists() && !Objects.equals(snapshot.getKey(), curChatObject.getLastMessageId())){
                         String senderId= Objects.requireNonNull(snapshot.child("Sender").getValue()).toString();
                         String text="";
                         String imageUri="";
@@ -390,7 +476,7 @@ public class SpecificChatActivity extends AppCompatActivity {
         });
     }
 
-//
+
     private void sendMessage(final String key) {
         final DatabaseReference mChatDb= FirebaseDatabase.getInstance().getReference().child("Chats").child(key);
         final FirebaseUser mUser= FirebaseAuth.getInstance().getCurrentUser();
@@ -473,9 +559,7 @@ public class SpecificChatActivity extends AppCompatActivity {
         mMessageList.setHasFixedSize(false);
         mMessageList.setNestedScrollingEnabled(false);
 
-
-
-        mMessageAdapter= new MessageAdapter(messageList,this,numberOfUsers,density);
+        mMessageAdapter= new MessageAdapter(messageList,this,curChatObject.getNumberOfUsers(),density);
         mMessageList.setAdapter(mMessageAdapter);
         mMessageListLayoutManager=new LinearLayoutManager(getApplicationContext(), RecyclerView.VERTICAL, false);
         mMessageList.setLayoutManager(mMessageListLayoutManager);
@@ -489,33 +573,35 @@ public class SpecificChatActivity extends AppCompatActivity {
         onDateScrolling=findViewById(R.id.onScrollingDate);
     }
 
-    @Override
-    public void onBackPressed() {
-            Intent intent=new Intent(this,AllChatsActivity.class);
-            startActivity(intent);
-            finish();
-    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.specific_chat_menu,menu);
+
+        if(curChatObject.isSingleChat()){
+            menu.findItem(R.id.changeChatPictureMenu).setVisible(false);
+        }
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
+
+            case android.R.id.home:
+                onBackPressed();
+                break;
+
             case R.id.changeChatPictureMenu:
                 openGalleryToChangeProfilePhoto();
                 break;
 
-
             case R.id.clearChat:
-                DatabaseReference mMessageDb=FirebaseDatabase.getInstance().getReference().child("Chats").child(key).child("Messages");
+                DatabaseReference mMessageDb=FirebaseDatabase.getInstance().getReference().child("Chats").child(chatKey).child("Messages");
                 mMessageDb.setValue(true);
                 recreate();
                 break;
-
 
             default:
                 Toast.makeText(getApplicationContext(),"sahi sahi select kar, zyaada dimaag mat chala",Toast.LENGTH_SHORT).show();

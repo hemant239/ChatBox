@@ -1,15 +1,16 @@
 package com.hemant239.chatbox.chat;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class ChatObject {
+public class ChatObject implements Serializable {
     private String  uid,
-            name,
-            imageUri,
-            lastMessageText,
-            lastMessageSender,
-            lastMessageTime,
-            lastMessageId;
+                    name,
+                    imageUri,
+                    lastMessageText,
+                    lastMessageSender,
+                    lastMessageTime,
+                    lastMessageId;
 
     private int numberOfUsers;
 
@@ -24,6 +25,14 @@ public class ChatObject {
         this.isSingleChat=isSingleChat;
     }
 
+    public ChatObject(String uid, String name, String imageUri, String lastMessageId,int numberOfUsers, boolean isSingleChat) {
+        this.uid=uid;
+        this.name=name;
+        this.imageUri=imageUri;
+        this.lastMessageId=lastMessageId;
+        this.numberOfUsers=numberOfUsers;
+        this.isSingleChat=isSingleChat;
+    }
 
     public ChatObject(String uid, String name, String imageUri,String lastMessageText,String lastMessageSender, String lastMessageTime,int numberOfUsers, String lastMessageId,boolean isSingleChat){
         this.uid=uid;

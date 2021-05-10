@@ -24,7 +24,7 @@ import com.google.firebase.storage.UploadTask;
 import java.util.HashMap;
 import java.util.Objects;
 
-public class NewUserDetails extends AppCompatActivity {
+public class NewUserDetailsActivity extends AppCompatActivity {
 
 
     EditText    mName,

@@ -114,7 +114,7 @@ public class LogInActivity extends AppCompatActivity {
                             public void onDataChange(@NonNull DataSnapshot snapshot) {
                                 if(!snapshot.exists()){
                                     mUserDB.child("Phone Number").setValue(mPhoneNumber.getText().toString());
-                                    startActivity(new Intent(getApplicationContext(),NewUserDetails.class));
+                                    startActivity(new Intent(getApplicationContext(), NewUserDetailsActivity.class));
                                     finish();
                                 }
                                 else{

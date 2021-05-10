@@ -1,33 +1,48 @@
 package com.hemant239.chatbox.user;
 
-public class UserObject {
+import java.io.Serializable;
+
+public class UserObject implements Serializable {
 
     private String  uid,
                     name,
                     phoneNumber,
+                    status,
                     profileImageUri;
 
     private boolean isSelected=false;
 
 
-    public UserObject(String uid,String name,String phoneNumber,String profileImageUri){
+    public UserObject(String uid,String name,String phoneNumber,String status,String profileImageUri){
         this.uid            =uid;
         this.name           =name;
         this.phoneNumber    =phoneNumber;
+        this.status         =status;
         this.profileImageUri=profileImageUri;
-
     }
 
-    public UserObject(String uid,String name,String phoneNumber){
+
+
+    public UserObject(String uid,String name,String phoneNumber,String status){
         this.uid            =uid;
         this.name           =name;
         this.phoneNumber    =phoneNumber;
+        this.status         =status;
         this.profileImageUri="";
     }
 
     public UserObject(String name, String phoneNumber){
         this.name           =name;
         this.phoneNumber    =phoneNumber;
+    }
+
+    public UserObject(){
+        this.uid            ="";
+        this.name           ="";
+        this.phoneNumber    ="";
+        this.status         ="";
+        this.profileImageUri="";
+
     }
 
 
@@ -43,6 +58,10 @@ public class UserObject {
         return phoneNumber;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
     public String getProfileImageUri() {
         return profileImageUri;
     }
@@ -50,6 +69,7 @@ public class UserObject {
     public boolean isSelected() {
         return isSelected;
     }
+
 
     public void setSelected(boolean selected) {
         isSelected = selected;

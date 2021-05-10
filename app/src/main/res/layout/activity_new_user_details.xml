@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".NewUserDetails"
+    tools:context=".NewUserDetailsActivity"
     android:orientation="vertical">
 
 
@@ -72,9 +72,6 @@
         android:layout_gravity="center"
         android:text="SUBMIT"
         android:id="@+id/submitDetails"/>
-
-
-
 
 
 

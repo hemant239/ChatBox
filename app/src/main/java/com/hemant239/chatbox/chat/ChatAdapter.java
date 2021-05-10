@@ -27,13 +27,9 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
     ArrayList<ChatObject> mChatList;
     Context context;
 
-
-    RecyclerView.Adapter<ChatAdapter.ViewHolder> tempChatAdapter;
-
     public ChatAdapter(ArrayList<ChatObject> chatList, AllChatsActivity allChatsActivity){
         mChatList=chatList;
         context=allChatsActivity;
-        tempChatAdapter=this;
     }
 
 
@@ -49,31 +45,31 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
     }
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
-        holder.mChatName.setText(mChatList.get(position).getName());
+        final ChatObject chatObject=mChatList.get(position);
 
+        holder.mChatName.setText(chatObject.getName());
 
-        if(mChatList.get(position).getNumberOfUsers()==2 ||mChatList.get(position).isSingleChat() ){
+        if(chatObject.isSingleChat() ){
             holder.mLastSender.setVisibility(View.GONE);
             holder.mColon.setVisibility(View.GONE);
         }
 
-        if(mChatList.get(position).getLastMessageText()!=null) {
-            holder.mLastSender.setText(mChatList.get(position).getLastMessageSender());
-            holder.mLastMessage.setText(mChatList.get(position).getLastMessageText());
-            holder.mLastMessageTime.setText(mChatList.get(position).getLastMessageTime());
+        if(chatObject.getLastMessageText()!=null) {
+            holder.mLastSender.setText(chatObject.getLastMessageSender());
+            holder.mLastMessage.setText(chatObject.getLastMessageText());
+            holder.mLastMessageTime.setText(chatObject.getLastMessageTime());
         }
 
 
-        if(!mChatList.get(position).getImageUri().equals("")){
+        if(!chatObject.getImageUri().equals("")){
             holder.mChatImage.setClipToOutline(true);
-            Glide.with(context).load(Uri.parse(mChatList.get(position).getImageUri())).into(holder.mChatImage);
-
+            Glide.with(context).load(Uri.parse(chatObject.getImageUri())).into(holder.mChatImage);
         }
         holder.mChatImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent =new Intent(context, ImageViewActivity.class);
-                intent.putExtra("URI",mChatList.get(position).getImageUri());
+                intent.putExtra("URI",chatObject.getImageUri());
                 context.startActivity(intent);
             }
         });
@@ -82,14 +78,8 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
             @Override
             public void onClick(View v) {
                 Intent intent=new Intent(context,SpecificChatActivity.class);
-                intent.putExtra("Chat Key",mChatList.get(position).getUid());
-                intent.putExtra("Chat Name",mChatList.get(position).getName());
-                intent.putExtra("Image Uri",mChatList.get(position).getImageUri());
-                intent.putExtra("Number Of Users",mChatList.get(position).getNumberOfUsers());
-                intent.putExtra("Last Message ID",mChatList.get(position).getLastMessageId());
-                intent.putExtra("is single chat",mChatList.get(position).isSingleChat());
+                intent.putExtra("chatObject",chatObject);
                 context.startActivity(intent);
-                ((AllChatsActivity)context).finish();
             }
         });
 
