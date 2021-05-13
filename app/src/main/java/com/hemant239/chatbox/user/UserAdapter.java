@@ -15,12 +15,14 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.hemant239.chatbox.ImageViewActivity;
+import com.google.firebase.auth.FirebaseAuth;
 import com.hemant239.chatbox.CreateSingleChatActivity;
+import com.hemant239.chatbox.ImageViewActivity;
 import com.hemant239.chatbox.R;
 import com.hemant239.chatbox.UserDetailsActivity;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
@@ -56,20 +58,25 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
 
-        final UserObject user=mUserList.get(position);
+        final UserObject user = mUserList.get(position);
         holder.mName.setText(user.getName());
         holder.mPhoneNumber.setText(user.getPhoneNumber());
         holder.mStatus.setText(user.getStatus());
 
-        if(!user.getProfileImageUri().equals("")){
+        String curUserKey = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+        if (user.getUid().equals(curUserKey)) {
+            holder.mName.setText("You");
+        }
+
+        if (!user.getProfileImageUri().equals("")) {
             holder.mProfilePhoto.setClipToOutline(true);
             Glide.with(context).load(Uri.parse(user.getProfileImageUri())).into(holder.mProfilePhoto);
         }
         holder.mProfilePhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent =new Intent(context, ImageViewActivity.class);
-                intent.putExtra("URI",user.getProfileImageUri());
+                Intent intent = new Intent(context, ImageViewActivity.class);
+                intent.putExtra("URI", user.getProfileImageUri());
                 context.startActivity(intent);
             }
         });

@@ -15,10 +15,10 @@
         />
 
 
-    <item android:title="Change Profile Photo"
+    <item
+        android:id="@+id/viewProfileMenu"
         app:showAsAction="never"
-        android:id="@+id/changeProfilePictureMenu"
-        />
+        android:title="View Profile" />
 
 
     <item android:title="Logout"

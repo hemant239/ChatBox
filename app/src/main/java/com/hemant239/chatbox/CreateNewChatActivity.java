@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.telephony.TelephonyManager;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -58,14 +59,17 @@ public class CreateNewChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_new_chat);
 
+        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
 
-        userList=new ArrayList<>();
-        contactsList=new ArrayList<>();
-        userDisplayed= new HashMap<>();
 
-        context=this;
+        userList = new ArrayList<>();
+        contactsList = new ArrayList<>();
+        userDisplayed = new HashMap<>();
 
-        isSingleChatActivity=getIntent().getBooleanExtra("isSingleChatActivity",false);
+        context = this;
+
+        isSingleChatActivity = getIntent().getBooleanExtra("isSingleChatActivity", false);
 
         initializeViews();
         initializeRecyclerViews();
@@ -223,14 +227,27 @@ public class CreateNewChatActivity extends AppCompatActivity {
 
     }
     private void initializeRecyclerViews() {
-        mUserList=findViewById(R.id.recyclerViewList);
+        mUserList = findViewById(R.id.recyclerViewList);
         mUserList.setHasFixedSize(false);
         mUserList.setNestedScrollingEnabled(false);
 
-        mUserListAdapter= new UserAdapter(userList,this, isSingleChatActivity,false);
+        mUserListAdapter = new UserAdapter(userList, this, isSingleChatActivity, false);
         mUserList.setAdapter(mUserListAdapter);
 
-        mUserListLayoutManager=new LinearLayoutManager(getApplicationContext(),RecyclerView.VERTICAL,false);
+        mUserListLayoutManager = new LinearLayoutManager(getApplicationContext(), RecyclerView.VERTICAL, false);
         mUserList.setLayoutManager(mUserListLayoutManager);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                break;
+
+            default:
+                Toast.makeText(getApplicationContext(), "choose a valid button", Toast.LENGTH_SHORT).show();
+        }
+        return true;
     }
 }

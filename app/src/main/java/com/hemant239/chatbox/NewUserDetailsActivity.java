@@ -59,11 +59,10 @@ public class NewUserDetailsActivity extends AppCompatActivity {
         mSubmit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mName!=null && !mName.getText().equals("")){
+                if (mName != null && !mName.getText().toString().equals("")) {
                     uploadDetailsOnFirebase();
-                }
-                else{
-                    Toast.makeText(getApplicationContext(),"Your parents have given you such a beautiful name, don't  be ashamed of using it",Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "Your parents have given you such a beautiful name, don't  be ashamed of using it", Toast.LENGTH_LONG).show();
                 }
             }
         });

@@ -1,9 +1,9 @@
 package com.hemant239.chatbox;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,7 +16,6 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -25,13 +24,14 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 import com.hemant239.chatbox.chat.ChatAdapter;
 import com.hemant239.chatbox.chat.ChatObject;
+import com.hemant239.chatbox.user.UserObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Objects;
 
 public class AllChatsActivity extends AppCompatActivity {
@@ -45,6 +45,10 @@ public class AllChatsActivity extends AppCompatActivity {
 
     DatabaseReference mUserDB, mChatDB;
 
+    static UserObject curUser;
+
+    static Context context;
+    String curDate;
 
 
     @Override
@@ -53,63 +57,57 @@ public class AllChatsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_all_chats);
 
 
-        if(getIntent().getBooleanExtra("First time",false)){
+        if (getIntent().getBooleanExtra("First time", false)) {
             requestUserPermission();
         }
 
-        chatList=new ArrayList<>();
+        context = this;
+        curUser = new UserObject();
+        getCurUserDetails();
+
+        Date date = Calendar.getInstance().getTime();
+        SimpleDateFormat simpleDateFormatDate = new SimpleDateFormat("EEE, MMM dd, yyyy");
+        curDate = simpleDateFormatDate.format(date).toUpperCase();
+
+        chatList = new ArrayList<>();
         initializeViews();
         initializeRecyclerViews();
         getChatList();
     }
 
-    final int CHANGE_PROFILE_PHOTO_CODE=1;
-    private void openGallery() {
-        Intent intent=new Intent();
-        intent.setType("image/*");
-        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE,false);
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent,"Select an image"),CHANGE_PROFILE_PHOTO_CODE);
-    }
+    private void getCurUserDetails() {
+        final String userKey = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+        FirebaseDatabase.getInstance().getReference().child("Users").child(userKey).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    String userName = "";
+                    String userPhone = "";
+                    String userImage = "";
+                    String userStatus = "";
 
-
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(resultCode==RESULT_OK){
-            switch (requestCode){
-                case CHANGE_PROFILE_PHOTO_CODE:
-                    String userId= Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
-                    final StorageReference profileStorage= FirebaseStorage.getInstance().getReference().child("ProfilePhotos").child(userId);
-                    final DatabaseReference mUserDb=FirebaseDatabase.getInstance().getReference().child("Users").child(userId);
-
-                    assert data != null;
-                    final UploadTask uploadTask=profileStorage.putFile(Objects.requireNonNull(data.getData()));
-                    uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                            profileStorage.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                @Override
-                                public void onSuccess(Uri uri) {
-                                    mUserDb.child("Profile Image Uri").setValue(uri.toString());
-                                }
-                            });
-
-                        }
-                    });
-
-                    break;
-
-                case 100:
-                    break;
-
-                default:
-                    Toast.makeText(getApplicationContext(),"something went wrong, please try again later onActivity result",Toast.LENGTH_SHORT).show();
-
+                    if (snapshot.child("Name").getValue() != null) {
+                        userName = Objects.requireNonNull(snapshot.child("Name").getValue()).toString();
+                    }
+                    if (snapshot.child("Phone Number").getValue() != null) {
+                        userPhone = Objects.requireNonNull(snapshot.child("Phone Number").getValue()).toString();
+                    }
+                    if (snapshot.child("Profile Image Uri").getValue() != null) {
+                        userImage = Objects.requireNonNull(snapshot.child("Profile Image Uri").getValue()).toString();
+                    }
+                    if (snapshot.child("Status").getValue() != null) {
+                        userStatus = Objects.requireNonNull(snapshot.child("Status").getValue()).toString();
+                    }
+                    curUser = new UserObject(userKey, userName, userPhone, userStatus, userImage);
+                }
             }
 
-        }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
     }
 
     private void getChatList() {
@@ -194,19 +192,27 @@ public class AllChatsActivity extends AppCompatActivity {
                     if(snapshot.child("info").child("Number Of Users").getValue()!=null){
                         numberOfUsers =Integer.parseInt(Objects.requireNonNull(snapshot.child("info").child("Number Of Users").getValue()).toString());
                     }
-                    if(snapshot.child("info").child("Last Message").getValue()!=null){
-                        lastMessageId= Objects.requireNonNull(snapshot.child("info").child("Last Message").getValue()).toString();
+                    if(snapshot.child("info").child("Last Message").getValue()!=null) {
+                        lastMessageId = Objects.requireNonNull(snapshot.child("info").child("Last Message").getValue()).toString();
 
-                        if(snapshot.child("Messages").child(lastMessageId).child("text").getValue()!=null){
-                            lastMessageText= Objects.requireNonNull(snapshot.child("Messages").child(lastMessageId).child("text").getValue()).toString();
-                        }
-                        if(snapshot.child("Messages").child(lastMessageId).child("timestamp").getValue()!=null){
-                            lastMessageTime= Objects.requireNonNull(snapshot.child("Messages").child(lastMessageId).child("timestamp").getValue()).toString();
+                        if (snapshot.child("Messages").child(lastMessageId).child("text").getValue() != null) {
+                            lastMessageText = Objects.requireNonNull(snapshot.child("Messages").child(lastMessageId).child("text").getValue()).toString();
                         }
 
-                        if(snapshot.child("Messages").child(lastMessageId).child("Sender").getValue()!=null){
-                            lastSenderId= Objects.requireNonNull(snapshot.child("Messages").child(lastMessageId).child("Sender").getValue()).toString();
-                            DatabaseReference mUserDB=FirebaseDatabase.getInstance().getReference().child("Users").child(lastSenderId).child("Name");
+                        if (snapshot.child("Messages").child(lastMessageId).child("date").getValue() != null) {
+                            String lastMessageDate = Objects.requireNonNull(snapshot.child("Messages").child(lastMessageId).child("date").getValue()).toString();
+                            if (snapshot.child("Messages").child(lastMessageId).child("timestamp").getValue() != null) {
+                                lastMessageTime = Objects.requireNonNull(snapshot.child("Messages").child(lastMessageId).child("timestamp").getValue()).toString();
+                            }
+                            if (!lastMessageDate.equals(curDate)) {
+                                lastMessageTime = lastMessageTime + " " + lastMessageDate;
+                            }
+                        }
+
+
+                        if (snapshot.child("Messages").child(lastMessageId).child("Sender").getValue() != null) {
+                            lastSenderId = Objects.requireNonNull(snapshot.child("Messages").child(lastMessageId).child("Sender").getValue()).toString();
+                            DatabaseReference mUserDB = FirebaseDatabase.getInstance().getReference().child("Users").child(lastSenderId).child("Name");
                             final String finalImageUri = imageUri;
                             final String finalLastMessageText = lastMessageText;
                             final String finalLastMessageTime = lastMessageTime;
@@ -226,9 +232,8 @@ public class AllChatsActivity extends AppCompatActivity {
                                             }
                                             else{
                                                 chatList.remove(indexOfObject);
-                                                chatList.add(0,chatObject);
-                                                mChatListAdapter.notifyItemMoved(indexOfObject,0);
-                                                mChatListAdapter.notifyItemChanged(0);
+                                                chatList.add(0, chatObject);
+                                                mChatListAdapter.notifyItemRangeChanged(0, indexOfObject + 1);
                                             }
 
 
@@ -281,22 +286,29 @@ public class AllChatsActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(requestCode==1){
-            if(grantResults[1]== PackageManager.PERMISSION_DENIED){
-                Toast.makeText(getApplicationContext(),"you didn't give the permission to access the contacts, So Fuck Off",Toast.LENGTH_LONG).show();
+        if (requestCode == 1) {
+            if (grantResults[1] == PackageManager.PERMISSION_DENIED) {
+                Toast.makeText(getApplicationContext(), "you didn't give the permission to access the contacts, So Fuck Off", Toast.LENGTH_LONG).show();
                 finish();
             }
         }
     }
 
-    private void createNewGroup() {
-        Intent intent=new Intent(this,CreateNewChatActivity.class);
-        intent.putExtra("isSingleChatActivity",false);
+    private void viewProfile() {
+        Intent intent = new Intent(this, UserDetailsActivity.class);
+        intent.putExtra("userObject", curUser);
         startActivity(intent);
     }
+
+    private void createNewGroup() {
+        Intent intent = new Intent(this, CreateNewChatActivity.class);
+        intent.putExtra("isSingleChatActivity", false);
+        startActivity(intent);
+    }
+
     private void singleChats() {
-        Intent intent=new Intent(this,CreateNewChatActivity.class);
-        intent.putExtra("isSingleChatActivity",true);
+        Intent intent = new Intent(this, CreateNewChatActivity.class);
+        intent.putExtra("isSingleChatActivity", true);
         startActivity(intent);
     }
     private void logOut() {
@@ -336,7 +348,7 @@ public class AllChatsActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
-        switch (item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.logoutMenu:
                 logOut();
                 break;
@@ -346,8 +358,8 @@ public class AllChatsActivity extends AppCompatActivity {
                 break;
 
 
-            case R.id.changeProfilePictureMenu:
-                openGallery();
+            case R.id.viewProfileMenu:
+                viewProfile();
                 break;
 
             case R.id.singleChatsMenu:
@@ -356,7 +368,7 @@ public class AllChatsActivity extends AppCompatActivity {
 
 
             default:
-                Toast.makeText(getApplicationContext(),"please select a valid option",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "please select a valid option", Toast.LENGTH_SHORT).show();
                 break;
 
         }

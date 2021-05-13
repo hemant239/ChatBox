@@ -66,6 +66,14 @@ public class UserObject implements Serializable {
         return profileImageUri;
     }
 
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public void setProfileImageUri(String profileImageUri) {
+        this.profileImageUri = profileImageUri;
+    }
+
     public boolean isSelected() {
         return isSelected;
     }

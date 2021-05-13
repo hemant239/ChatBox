@@ -3,9 +3,11 @@ package com.hemant239.chatbox;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -40,15 +42,18 @@ public class GroupDetailsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group_details);
 
-        userList=new ArrayList<>();
+        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
+
+        userList = new ArrayList<>();
         initializeViews();
         initializeRecyclerViews();
 
 
-        key="";
-        name="";
-        image="";
-        key=getIntent().getStringExtra("Key");
+        key = "";
+        name = "";
+        image = "";
+        key = getIntent().getStringExtra("Key");
         name=getIntent().getStringExtra("Name");
         image=getIntent().getStringExtra("Image");
 
@@ -134,11 +139,24 @@ public class GroupDetailsActivity extends AppCompatActivity {
         mUserList.setHasFixedSize(false);
         mUserList.setNestedScrollingEnabled(false);
 
-        mUserListAdapter= new UserAdapter(userList,this, false,true);
+        mUserListAdapter = new UserAdapter(userList, this, false, true);
         mUserList.setAdapter(mUserListAdapter);
 
-        mUserListLayoutManager=new LinearLayoutManager(getApplicationContext(),RecyclerView.VERTICAL,false);
+        mUserListLayoutManager = new LinearLayoutManager(getApplicationContext(), RecyclerView.VERTICAL, false);
         mUserList.setLayoutManager(mUserListLayoutManager);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                break;
+
+            default:
+                Toast.makeText(getApplicationContext(), "choose a valid button", Toast.LENGTH_SHORT).show();
+        }
+        return true;
     }
 
 }
