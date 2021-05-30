@@ -4,25 +4,32 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public class ChatObject implements Serializable {
-    private String  uid,
-                    name,
-                    imageUri,
-                    lastMessageText,
-                    lastMessageSender,
-                    lastMessageTime,
-                    lastMessageId;
+    private String uid,
+            name,
+            imageUri,
+            lastMessageText,
+            lastMessageSender,
+            lastSenderId,
+            lastMessageTime,
+            lastMessageId;
 
     private int numberOfUsers;
 
     private boolean isSingleChat;
 
 
+    public ChatObject(String uid) {
+        this.uid = uid;
+        this.lastSenderId = "";
+    }
+
     public ChatObject(String uid, String name, String imageUri, int numberOfUsers, boolean isSingleChat) {
-        this.uid=uid;
-        this.name=name;
-        this.imageUri=imageUri;
-        this.numberOfUsers=numberOfUsers;
-        this.isSingleChat=isSingleChat;
+        this.uid = uid;
+        this.name = name;
+        this.imageUri = imageUri;
+        this.numberOfUsers = numberOfUsers;
+        this.isSingleChat = isSingleChat;
+        this.lastSenderId = "";
     }
 
     public ChatObject(String uid, String name, String imageUri, String lastMessageId,int numberOfUsers, boolean isSingleChat) {
@@ -31,23 +38,22 @@ public class ChatObject implements Serializable {
         this.imageUri=imageUri;
         this.lastMessageId=lastMessageId;
         this.numberOfUsers=numberOfUsers;
-        this.isSingleChat=isSingleChat;
+        this.isSingleChat = isSingleChat;
+        this.lastSenderId = "";
     }
 
-    public ChatObject(String uid, String name, String imageUri,String lastMessageText,String lastMessageSender, String lastMessageTime,int numberOfUsers, String lastMessageId,boolean isSingleChat){
-        this.uid=uid;
-        this.name=name;
-        this.imageUri=imageUri;
-        this.lastMessageText=lastMessageText;
-        this.lastMessageSender=lastMessageSender;
-        this.lastMessageTime=lastMessageTime;
-        this.numberOfUsers=numberOfUsers;
-        this.lastMessageId=lastMessageId;
-        this.isSingleChat=isSingleChat;
+    public ChatObject(String uid, String name, String imageUri, String lastMessageText, String lastMessageSender, String lastSenderId, String lastMessageTime, int numberOfUsers, String lastMessageId, boolean isSingleChat) {
+        this.uid = uid;
+        this.name = name;
+        this.imageUri = imageUri;
+        this.lastMessageText = lastMessageText;
+        this.lastMessageSender = lastMessageSender;
+        this.lastSenderId = lastSenderId;
+        this.lastMessageTime = lastMessageTime;
+        this.numberOfUsers = numberOfUsers;
+        this.lastMessageId = lastMessageId;
+        this.isSingleChat = isSingleChat;
     }
-
-
-
 
     public String getName() {
         return name;
@@ -74,6 +80,10 @@ public class ChatObject implements Serializable {
         return lastMessageSender;
     }
 
+    public String getLastSenderId() {
+        return lastSenderId;
+    }
+
     public String getLastMessageTime() {
         return lastMessageTime;
     }
@@ -85,6 +95,16 @@ public class ChatObject implements Serializable {
     public boolean isSingleChat() {
         return isSingleChat;
     }
+
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setImageUri(String imageUri) {
+        this.imageUri = imageUri;
+    }
+
 
     @Override
     public boolean equals(Object o) {

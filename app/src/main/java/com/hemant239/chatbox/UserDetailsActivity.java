@@ -28,7 +28,6 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.hemant239.chatbox.user.UserObject;
 
-import java.util.HashMap;
 import java.util.Objects;
 
 public class UserDetailsActivity extends AppCompatActivity {
@@ -49,7 +48,6 @@ public class UserDetailsActivity extends AppCompatActivity {
             userPhone,
             userStatus,
             userImage;
-    boolean isPhotoChanged;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,7 +56,6 @@ public class UserDetailsActivity extends AppCompatActivity {
 
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
-        isPhotoChanged = false;
 
         UserObject userObject = (UserObject) getIntent().getSerializableExtra("userObject");
         assert userObject != null;
@@ -156,7 +153,6 @@ public class UserDetailsActivity extends AppCompatActivity {
                                 public void onSuccess(Uri uri) {
                                     changeProfilePhoto(uri);
                                     mUserDb.child("Profile Image Uri").setValue(uri.toString());
-                                    isPhotoChanged = true;
                                     AllChatsActivity.curUser.setProfileImageUri(uri.toString());
                                     Glide.with(getApplicationContext()).load(uri).into(mUserImage);
                                     ((LoadingActivity) LoadingActivity.context).finish();
@@ -190,10 +186,7 @@ public class UserDetailsActivity extends AppCompatActivity {
                         String userKey = childSnapshot.getKey();
                         String chatKey = Objects.requireNonNull(childSnapshot.getValue()).toString();
                         assert userKey != null;
-                        HashMap<String, Object> chatInfo = new HashMap<>();
-                        chatInfo.put(userKey + "/Chat Profile Image Uri", uri.toString());
-                        chatInfo.put("shouldUpdate", true);
-                        mChatDb.child(chatKey).child("info").updateChildren(chatInfo);
+                        mChatDb.child(chatKey + "/info/" + userKey + "/Chat Profile Image Uri").setValue(uri.toString());
                     }
                 }
             }
@@ -204,15 +197,6 @@ public class UserDetailsActivity extends AppCompatActivity {
             }
         });
 
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (isPhotoChanged) {
-            ((AllChatsActivity) AllChatsActivity.context).finish();
-            ((AllChatsActivity) AllChatsActivity.context).startActivity(new Intent(getApplicationContext(), AllChatsActivity.class));
-        }
-        super.onBackPressed();
     }
 
     private void initializeViews() {

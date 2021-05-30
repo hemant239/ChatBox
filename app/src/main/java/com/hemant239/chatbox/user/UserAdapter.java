@@ -15,14 +15,13 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.google.firebase.auth.FirebaseAuth;
+import com.hemant239.chatbox.AllChatsActivity;
 import com.hemant239.chatbox.CreateSingleChatActivity;
 import com.hemant239.chatbox.ImageViewActivity;
 import com.hemant239.chatbox.R;
 import com.hemant239.chatbox.UserDetailsActivity;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
@@ -63,7 +62,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         holder.mPhoneNumber.setText(user.getPhoneNumber());
         holder.mStatus.setText(user.getStatus());
 
-        String curUserKey = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+        String curUserKey = AllChatsActivity.curUser.getUid();
         if (user.getUid().equals(curUserKey)) {
             holder.mName.setText("You");
         }

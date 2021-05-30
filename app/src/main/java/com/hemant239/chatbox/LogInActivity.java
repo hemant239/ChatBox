@@ -24,7 +24,13 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.hemant239.chatbox.user.UserObject;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 
@@ -46,17 +52,11 @@ public class LogInActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
-
-        //TODO: set it false for logout.
-
         mAuth=FirebaseAuth.getInstance();
         userLoggedIn();
         setContentView(R.layout.activity_login);
 
-
         initializeViews();
-
 
         mSend.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -69,7 +69,6 @@ public class LogInActivity extends AppCompatActivity {
                 }
             }
         });
-
 
         mCallbacks= new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
             @Override
@@ -88,12 +87,10 @@ public class LogInActivity extends AppCompatActivity {
                 findViewById(R.id.codeLayout).setVisibility(View.VISIBLE);
                 mVerificationId=verificationId;
                 mSend.setText("Verify Code");
-                //temp;
             }
         };
 
     }
-    //TODO:  Add conditions on inputs.
 
 
     private void verifyPhoneNumberWithCode() {
@@ -112,15 +109,15 @@ public class LogInActivity extends AppCompatActivity {
                         mUserDB.addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                if(!snapshot.exists()){
-                                    mUserDB.child("Phone Number").setValue(mPhoneNumber.getText().toString());
-                                    startActivity(new Intent(getApplicationContext(), NewUserDetailsActivity.class));
+                                if(!snapshot.exists()) {
+                                    Intent intent = new Intent(getApplicationContext(), NewUserDetailsActivity.class);
+                                    intent.putExtra("phoneNumber", mPhoneNumber.getText().toString());
+                                    startActivity(intent);
                                     finish();
                                 }
                                 else{
                                     userLoggedIn();
                                 }
-
                             }
                             @Override
                             public void onCancelled(@NonNull DatabaseError error) {
@@ -135,17 +132,75 @@ public class LogInActivity extends AppCompatActivity {
     }
 
     private void userLoggedIn() {
-        FirebaseUser mUser= mAuth.getCurrentUser();
-        if(mUser!=null){
-            Intent intent= new Intent(this, AllChatsActivity.class);
-            intent.putExtra("First time",true);
-            startActivity(intent);
-            finish();
+        FirebaseUser mUser = mAuth.getCurrentUser();
+        if (mUser != null) {
+            File file = new File(getApplicationContext().getFilesDir(), "user.ser");
+            try {
+                FileInputStream fileInputStream = new FileInputStream(file);
+                ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+                UserObject userObject = new UserObject();
+                userObject = (UserObject) objectInputStream.readObject();
+                objectInputStream.close();
+                fileInputStream.close();
+
+
+                Intent intent = new Intent(getApplicationContext(), AllChatsActivity.class);
+                intent.putExtra("First time", false);
+                intent.putExtra("curUser", userObject);
+                startActivity(intent);
+                finish();
+
+            } catch (IOException | ClassNotFoundException e) {
+                getUserDetails(mUser.getUid());
+                e.printStackTrace();
+            }
+
         }
     }
 
+    private void getUserDetails(final String userKey) {
+        FirebaseDatabase.getInstance().getReference().child("Users").child(userKey).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    String userName = "";
+                    String userPhone = "";
+                    String userImage = "";
+                    String userStatus = "";
+                    String chatID = "";
+
+                    if (snapshot.child("Name").getValue() != null) {
+                        userName = Objects.requireNonNull(snapshot.child("Name").getValue()).toString();
+                    }
+                    if (snapshot.child("Phone Number").getValue() != null) {
+                        userPhone = Objects.requireNonNull(snapshot.child("Phone Number").getValue()).toString();
+                    }
+                    if (snapshot.child("Profile Image Uri").getValue() != null) {
+                        userImage = Objects.requireNonNull(snapshot.child("Profile Image Uri").getValue()).toString();
+                    }
+                    if (snapshot.child("Status").getValue() != null) {
+                        userStatus = Objects.requireNonNull(snapshot.child("Status").getValue()).toString();
+                    }
+
+
+                    UserObject userObject = new UserObject(userKey, userName, userPhone, userStatus, userImage, chatID);
+                    Intent intent = new Intent(getApplicationContext(), AllChatsActivity.class);
+                    intent.putExtra("First time", true);
+                    intent.putExtra("curUser", userObject);
+                    startActivity(intent);
+                    finish();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
     private void startPhoneNumberVerification() {
-        PhoneAuthOptions phoneAuthOptions= PhoneAuthOptions.newBuilder(mAuth)
+        PhoneAuthOptions phoneAuthOptions = PhoneAuthOptions.newBuilder(mAuth)
                 .setPhoneNumber(mPhoneNumber.getText().toString())
                 .setTimeout(90L, TimeUnit.SECONDS)
                 .setActivity(this)
@@ -158,7 +213,6 @@ public class LogInActivity extends AppCompatActivity {
     private void initializeViews() {
         mPhoneNumber        = findViewById(R.id.phoneNumber);
         mVerificationCode   = findViewById(R.id.verificationCode);
-
         mSend       = findViewById((R.id.buttonSend));
     }
 }

@@ -1,10 +1,7 @@
 package com.hemant239.chatbox;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.os.Bundle;
-import android.provider.ContactsContract;
-import android.telephony.TelephonyManager;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -22,11 +19,9 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.hemant239.chatbox.user.UserAdapter;
 import com.hemant239.chatbox.user.UserObject;
-import com.hemant239.chatbox.utils.CountryToPhonePrefix;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -45,14 +40,12 @@ public class CreateNewChatActivity extends AppCompatActivity {
     RecyclerView.Adapter<UserAdapter.ViewHolder> mUserListAdapter;
     RecyclerView.LayoutManager mUserListLayoutManager;
 
-    ArrayList<UserObject>   contactsList,
-                            userList;
+    ArrayList<UserObject> userList;
+
+    HashMap<String, UserObject> contacts;
 
 
     boolean isSingleChatActivity;
-
-    HashMap<String,Boolean> userDisplayed;
-    //this is to make sure that if the user has 2 contacts with same number,only one of them is displayed.
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,8 +57,8 @@ public class CreateNewChatActivity extends AppCompatActivity {
 
 
         userList = new ArrayList<>();
-        contactsList = new ArrayList<>();
-        userDisplayed = new HashMap<>();
+        contacts = AllChatsActivity.allContacts;
+
 
         context = this;
 
@@ -74,7 +67,7 @@ public class CreateNewChatActivity extends AppCompatActivity {
         initializeViews();
         initializeRecyclerViews();
 
-        if(isSingleChatActivity){
+        if (isSingleChatActivity) {
             mCreateChat.setVisibility(View.GONE);
             mChatName.setVisibility(View.GONE);
         }
@@ -99,14 +92,47 @@ public class CreateNewChatActivity extends AppCompatActivity {
         getContactList();
     }
 
+    private void getContactList() {
+        for (final UserObject userObject : contacts.values()) {
+            final String userKey = userObject.getUid();
+            FirebaseDatabase.getInstance().getReference().child("Users").child(userKey).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        String userName = userObject.getName();
+                        String userPhone = userObject.getPhoneNumber();
+                        String userImage = "";
+                        String userStatus = "";
+                        String chatId = userObject.getChatID();
+                        if (snapshot.child("Profile Image Uri").getValue() != null) {
+                            userImage = Objects.requireNonNull(snapshot.child("Profile Image Uri").getValue()).toString();
+                        }
+                        if (snapshot.child("Status").getValue() != null) {
+                            userStatus = Objects.requireNonNull(snapshot.child("Status").getValue()).toString();
+                        }
+
+                        UserObject newUser = new UserObject(userKey, userName, userPhone, userStatus, userImage, chatId);
+                        userList.add(newUser);
+                        mUserListAdapter.notifyItemInserted(userList.size() - 1);
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
+        }
+    }
+
     private void createChat() {
 
-        DatabaseReference mChatDB= FirebaseDatabase.getInstance().getReference().child("Chats");
-        String key= mChatDB.push().getKey();
-        DatabaseReference mUserDB=FirebaseDatabase.getInstance().getReference().child("Users");
+        DatabaseReference mChatDB = FirebaseDatabase.getInstance().getReference().child("Chats");
+        String key = mChatDB.push().getKey();
+        DatabaseReference mUserDB = FirebaseDatabase.getInstance().getReference().child("Users");
 
         assert key != null;
-        mChatDB=mChatDB.child(key).child("info");
+        mChatDB = mChatDB.child(key).child("info");
 
         HashMap<String,Object> mChatInfo=new HashMap<>();
 
@@ -137,94 +163,9 @@ public class CreateNewChatActivity extends AppCompatActivity {
 
     }
 
-    private void getContactList() {
-
-        Cursor cursor=getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,null,null,null,null);
-
-        while(cursor!=null && cursor.moveToNext()){
-            String phoneNumber=cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-            String name=cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-
-
-            phoneNumber=phoneNumber.replace(" ","");
-            phoneNumber=phoneNumber.replace("-","");
-            phoneNumber=phoneNumber.replace("(","");
-            phoneNumber=phoneNumber.replace(")","");
-            phoneNumber=phoneNumber.replace("/","");
-            phoneNumber=phoneNumber.replace("#","");
-
-            if(phoneNumber.charAt(0)!='+'){
-                phoneNumber = getIsoPrefix()+phoneNumber;
-            }
-
-
-            String curUserPhone= Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getPhoneNumber();
-            if(name != null && userDisplayed.get(phoneNumber)==null && !phoneNumber.equals(curUserPhone)){
-                userDisplayed.put(phoneNumber,true);
-                UserObject contactUser=new UserObject(name,phoneNumber);
-                checkUserDetails(contactUser);
-            }
-        }
-        assert cursor != null;
-        cursor.close();
-    }
-
-    private void checkUserDetails(final UserObject contactUser) {
-        DatabaseReference mUserDB= FirebaseDatabase.getInstance().getReference().child("Users");
-        Query query=mUserDB.orderByChild("Phone Number").equalTo(contactUser.getPhoneNumber());
-
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if(snapshot.exists()){
-
-                    for(DataSnapshot childSnapshot: (snapshot.getChildren())){
-                        if(childSnapshot.getKey()!=null && childSnapshot.child("Name").getValue()!=null  && childSnapshot.child("Phone Number").getValue()!=null ){
-
-                            String status="";
-                            if(childSnapshot.child("Status").getValue()!=null){
-                                status= Objects.requireNonNull(childSnapshot.child("Status").getValue()).toString();
-                            }
-                            if(childSnapshot.child("Profile Image Uri").getValue()!=null){
-                                UserObject user=new UserObject(childSnapshot.getKey(),contactUser.getName(),contactUser.getPhoneNumber(),status,Objects.requireNonNull(childSnapshot.child("Profile Image Uri").getValue()).toString());
-                                userList.add(user);
-                            }
-                            else{
-                                UserObject user=new UserObject(childSnapshot.getKey(),contactUser.getName(),contactUser.getPhoneNumber(),status);
-                                userList.add(user);
-                            }
-
-                            mUserListAdapter.notifyItemInserted(userList.size()-1);
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(getApplicationContext(),"something went wrong, please try again later",Toast.LENGTH_SHORT).show();
-            }
-        });
-
-    }
-
-    private String getIsoPrefix() {
-
-        String iso="";
-
-        TelephonyManager telephonyManager=(TelephonyManager)getApplicationContext().getSystemService(TELEPHONY_SERVICE);
-        if(telephonyManager!=null){
-            iso=CountryToPhonePrefix.prefixFor(telephonyManager.getNetworkCountryIso());
-        }
-
-        return iso;
-
-    }
-
     private void initializeViews() {
         mCreateChat = findViewById(R.id.newChat);
         mChatName=findViewById(R.id.chatName);
-
     }
     private void initializeRecyclerViews() {
         mUserList = findViewById(R.id.recyclerViewList);

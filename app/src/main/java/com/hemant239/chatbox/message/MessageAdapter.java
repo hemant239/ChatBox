@@ -14,12 +14,11 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.google.firebase.auth.FirebaseAuth;
+import com.hemant239.chatbox.AllChatsActivity;
 import com.hemant239.chatbox.ImageViewActivity;
 import com.hemant239.chatbox.R;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHolder> {
 
@@ -35,9 +34,9 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
     public MessageAdapter(ArrayList<MessageObject> messageList, Context context, int numberOfUsers,float density){
         this.messageList=messageList;
         this.context=context;
-        this.numberOfUsers=numberOfUsers;
-        userKey= Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
-        this.density=density;
+        this.numberOfUsers = numberOfUsers;
+        userKey = AllChatsActivity.curUser.getUid();
+        this.density = density;
     }
 
     @NonNull

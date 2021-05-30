@@ -20,6 +20,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.hemant239.chatbox.user.UserObject;
 
 import java.util.HashMap;
 import java.util.Objects;
@@ -55,12 +56,13 @@ public class NewUserDetailsActivity extends AppCompatActivity {
         });
         mImage.setClipToOutline(true);
 
+        final String phoneNumber = getIntent().getStringExtra("phoneNumber");
 
         mSubmit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mName != null && !mName.getText().toString().equals("")) {
-                    uploadDetailsOnFirebase();
+                    uploadDetailsOnFirebase(phoneNumber);
                 } else {
                     Toast.makeText(getApplicationContext(), "Your parents have given you such a beautiful name, don't  be ashamed of using it", Toast.LENGTH_LONG).show();
                 }
@@ -70,21 +72,22 @@ public class NewUserDetailsActivity extends AppCompatActivity {
 
     }
 
-    private void uploadDetailsOnFirebase() {
-        String userId= Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
-        final StorageReference profileStorage= FirebaseStorage.getInstance().getReference().child("ProfilePhotos").child(userId);
-        final DatabaseReference mUserDb= FirebaseDatabase.getInstance().getReference().child("Users").child(userId);
+    private void uploadDetailsOnFirebase(final String phoneNumber) {
+        final String userId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+        final StorageReference profileStorage = FirebaseStorage.getInstance().getReference().child("ProfilePhotos").child(userId);
+        final DatabaseReference mUserDb = FirebaseDatabase.getInstance().getReference().child("Users").child(userId);
 
-        final HashMap<String, Object> mUserInfo=new HashMap<>();
+        final HashMap<String, Object> mUserInfo = new HashMap<>();
 
-        mUserInfo.put("Name",mName.getText().toString());
-        mUserInfo.put("Status",mStatus.getText().toString());
+        mUserInfo.put("Name", mName.getText().toString());
+        mUserInfo.put("Phone Number", phoneNumber);
+        mUserInfo.put("Status", mStatus.getText().toString());
 
-        if(!imageUri.equals("")){
+        if (!imageUri.equals("")) {
             final UploadTask uploadTask=profileStorage.putFile(Objects.requireNonNull(Uri.parse(imageUri)));
             Intent intent =new Intent(getApplicationContext(),LoadingActivity.class);
-            intent.putExtra("message","Your Account is being created \\n please wait");
-            intent.putExtra("isNewUser",true);
+            intent.putExtra("message", "Your Account is being created \n please wait");
+            intent.putExtra("isNewUser", true);
             startActivity(intent);
             uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
@@ -92,27 +95,30 @@ public class NewUserDetailsActivity extends AppCompatActivity {
                     profileStorage.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                         @Override
                         public void onSuccess(Uri uri) {
-                            mUserInfo.put("Profile Image Uri",uri.toString());
+                            mUserInfo.put("Profile Image Uri", uri.toString());
                             mUserDb.updateChildren(mUserInfo);
-                            ((LoadingActivity)LoadingActivity.context).finish();
-                            userLoggedIn();
+                            ((LoadingActivity) LoadingActivity.context).finish();
+                            UserObject userObject = new UserObject(userId, mName.getText().toString(), phoneNumber, mStatus.getText().toString(), uri.toString(), "");
+                            userLoggedIn(userObject);
                         }
                     });
 
                 }
             });
         }
-        else{
+        else {
             mUserDb.updateChildren(mUserInfo);
-            userLoggedIn();
+            UserObject userObject = new UserObject(userId, mName.getText().toString(), phoneNumber, mStatus.getText().toString(), "", "");
+            userLoggedIn(userObject);
         }
 
     }
 
 
-    private void userLoggedIn() {
-        Intent intent= new Intent(this, AllChatsActivity.class);
-        intent.putExtra("First time",true);
+    private void userLoggedIn(UserObject userObject) {
+        Intent intent = new Intent(this, AllChatsActivity.class);
+        intent.putExtra("First time", true);
+        intent.putExtra("curUser", userObject);
         startActivity(intent);
         finish();
     }

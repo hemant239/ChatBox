@@ -47,8 +47,6 @@ import java.util.Objects;
 
 public class SpecificChatActivity extends AppCompatActivity {
 
-    //TODO:  Add functionality to delete single messages for everyone and single user.
-    
     EditText mMessageText;
     Button mSendMessage,
             mAddMedia;
@@ -74,6 +72,7 @@ public class SpecificChatActivity extends AppCompatActivity {
     ChatObject curChatObject;
 
     UserObject userObject;
+    String curUserPhone;
 
 
     @Override
@@ -92,6 +91,7 @@ public class SpecificChatActivity extends AppCompatActivity {
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         float density=displayMetrics.density;
 
+        curUserPhone = AllChatsActivity.curUser.getPhoneNumber();
 
         chatName=view.findViewById(R.id.chatAppName);
         chatPhoto=view.findViewById(R.id.chatAppProfileImage);
@@ -216,22 +216,30 @@ public class SpecificChatActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
                     String userName="";
-                    String userPhone="";
-                    String userImage="";
-                    String userStatus="";
+                    String userPhone = "";
+                    String userImage = "";
+                    String userStatus = "";
+                    String chatID = "";
 
-                    if(snapshot.child("Name").getValue()!=null){
-                        userName= Objects.requireNonNull(snapshot.child("Name").getValue()).toString();
+                    if (snapshot.child("Name").getValue() != null) {
+                        userName = Objects.requireNonNull(snapshot.child("Name").getValue()).toString();
                     }
-                    if(snapshot.child("Phone Number").getValue()!=null){
-                        userPhone= Objects.requireNonNull(snapshot.child("Phone Number").getValue()).toString();
-                    }if(snapshot.child("Profile Image Uri").getValue()!=null){
-                        userImage= Objects.requireNonNull(snapshot.child("Profile Image Uri").getValue()).toString();
+                    if (snapshot.child("Phone Number").getValue() != null) {
+                        userPhone = Objects.requireNonNull(snapshot.child("Phone Number").getValue()).toString();
                     }
-                    if(snapshot.child("Status").getValue()!=null){
-                        userStatus= Objects.requireNonNull(snapshot.child("Status").getValue()).toString();
+                    if (snapshot.child("Profile Image Uri").getValue() != null) {
+                        userImage = Objects.requireNonNull(snapshot.child("Profile Image Uri").getValue()).toString();
                     }
-                    userObject=new UserObject(userKey,userName,userPhone,userStatus,userImage);
+                    if (snapshot.child("Status").getValue() != null) {
+                        userStatus = Objects.requireNonNull(snapshot.child("Status").getValue()).toString();
+                    }
+
+                    userName = userPhone;
+                    if (AllChatsActivity.allContacts.get(userPhone) != null) {
+                        userName = Objects.requireNonNull(AllChatsActivity.allContacts.get(userPhone)).getName();
+                        chatID = Objects.requireNonNull(AllChatsActivity.allContacts.get(userPhone)).getChatID();
+                    }
+                    userObject = new UserObject(userKey, userName, userPhone, userStatus, userImage, chatID);
 
                 }
             }
@@ -241,8 +249,6 @@ public class SpecificChatActivity extends AppCompatActivity {
 
             }
         });
-
-
     }
 
     final int ADD_MEDIA_CODE=2;
@@ -263,8 +269,6 @@ public class SpecificChatActivity extends AppCompatActivity {
         intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(intent,"Select an image"),CHANGE_CHAT_PHOTO_CODE);
     }
-
-
 
 
     @Override
@@ -357,26 +361,7 @@ public class SpecificChatActivity extends AppCompatActivity {
                         for(DataSnapshot childSnapshot:snapshot.getChildren()){
                             if(childSnapshot.exists()){
                                 numberOfMessages--;
-                                String senderId= Objects.requireNonNull(childSnapshot.child("Sender").getValue()).toString();
-                                String text="";
-                                String imageUri="";
-                                String time="";
-                                String date="";
-
-                                if(childSnapshot.child("text").getValue()!=null){
-                                    text= Objects.requireNonNull(childSnapshot.child("text").getValue()).toString();
-                                }
-                                if(childSnapshot.child("Image Uri").getValue()!=null){
-                                    imageUri= Objects.requireNonNull(childSnapshot.child("Image Uri").getValue()).toString();
-                                }
-                                if(childSnapshot.child("timestamp").getValue()!=null){
-                                    time= Objects.requireNonNull(childSnapshot.child("timestamp").getValue()).toString();
-                                }
-                                if(childSnapshot.child("date").getValue()!=null) {
-                                    date = Objects.requireNonNull(childSnapshot.child("date").getValue()).toString();
-                                }
-
-                                getMessageUserData(childSnapshot.getKey(),text,imageUri,senderId,time,date,false,numberOfMessages);
+                                getMessageData(childSnapshot.getKey(), childSnapshot, false, numberOfMessages);
                             }
                         }
                     }
@@ -393,29 +378,9 @@ public class SpecificChatActivity extends AppCompatActivity {
                 @Override
                 public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
 
-                    if(snapshot.exists() && !Objects.equals(snapshot.getKey(), curChatObject.getLastMessageId())){
-                        String senderId= Objects.requireNonNull(snapshot.child("Sender").getValue()).toString();
-                        String text="";
-                        String imageUri="";
-                        String time="";
-                        String date="";
-
-                        if(snapshot.child("text").getValue()!=null){
-                            text= Objects.requireNonNull(snapshot.child("text").getValue()).toString();
-                        }
-                        if(snapshot.child("Image Uri").getValue()!=null){
-                            imageUri= Objects.requireNonNull(snapshot.child("Image Uri").getValue()).toString();
-                        }
-                        if(snapshot.child("timestamp").getValue()!=null){
-                            time= Objects.requireNonNull(snapshot.child("timestamp").getValue()).toString();
-                        }
-                        if(snapshot.child("date").getValue()!=null){
-                            date= Objects.requireNonNull(snapshot.child("date").getValue()).toString();
-                        }
-
-                        getMessageUserData(snapshot.getKey(),text,imageUri,senderId,time,date,true,0);
+                    if (snapshot.exists() && !Objects.equals(snapshot.getKey(), curChatObject.getLastMessageId())) {
+                        getMessageData(snapshot.getKey(), snapshot, true, 0);
                     }
-
                 }
 
                 @Override
@@ -443,77 +408,115 @@ public class SpecificChatActivity extends AppCompatActivity {
 
     }
 
-    private void getMessageUserData(final String messageKey, final String text, final String imageUri, final String senderId, final String time, final String date, final boolean isNewMessage, final int index) {
-        DatabaseReference mUserDB=FirebaseDatabase.getInstance().getReference().child("Users").child(senderId).child("Name");
-        mUserDB.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if(snapshot.exists()){
-                    String senderName= Objects.requireNonNull(snapshot.getValue()).toString();
+    private void getMessageData(String messageKey, DataSnapshot snapshot, boolean isNewMessage, int index) {
+        String senderId = "";
+        String senderPhone = "";
+        String text = "";
+        String imageUri = "";
+        String time = "";
+        String date = "";
 
-                    MessageObject newMessage=new MessageObject(messageKey,text,imageUri,senderId,senderName,time,date);
+        if (snapshot.child("Sender").getValue() != null) {
+            senderId = Objects.requireNonNull(snapshot.child("Sender").getValue()).toString();
+        }
+        if (snapshot.child("Sender Phone").getValue() != null) {
+            senderPhone = Objects.requireNonNull(snapshot.child("Sender Phone").getValue()).toString();
+        }
+        if (snapshot.child("text").getValue() != null) {
+            text = Objects.requireNonNull(snapshot.child("text").getValue()).toString();
+        }
+        if (snapshot.child("Image Uri").getValue() != null) {
+            imageUri = Objects.requireNonNull(snapshot.child("Image Uri").getValue()).toString();
+        }
+        if (snapshot.child("timestamp").getValue() != null) {
+            time = Objects.requireNonNull(snapshot.child("timestamp").getValue()).toString();
+        }
+        if (snapshot.child("date").getValue() != null) {
+            date = Objects.requireNonNull(snapshot.child("date").getValue()).toString();
+        }
+        if (AllChatsActivity.allContacts.get(senderPhone) != null) {
+            senderPhone = Objects.requireNonNull(AllChatsActivity.allContacts.get(senderPhone)).getPhoneNumber();
+        }
 
-                    if(isNewMessage){
-                        messageList.add(newMessage);
-                        mMessageListLayoutManager.scrollToPosition(messageList.size()-1);
-                        mMessageAdapter.notifyItemInserted(messageList.size()-1);
-                        if(messageList.size()>1) {
-                            mMessageAdapter.notifyItemChanged(messageList.size() - 2);
-                        }
-                    }
-                    else{
-                        messageList.set(index,newMessage);
-                        mMessageListLayoutManager.scrollToPosition(messageList.size()-1);
-                        mMessageAdapter.notifyItemChanged(index);
-                    }
-                }
+        MessageObject newMessage = new MessageObject(messageKey, text, imageUri, senderId, senderPhone, time, date);
+
+        if (isNewMessage) {
+            messageList.add(newMessage);
+            if (senderId.equals(AllChatsActivity.curUser.getUid())) {
+                mMessageListLayoutManager.scrollToPosition(messageList.size() - 1);
             }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(getApplicationContext(),"something went wrong, please try again later",Toast.LENGTH_SHORT).show();
+            mMessageAdapter.notifyItemInserted(messageList.size() - 1);
+            if (messageList.size() > 1) {
+                mMessageAdapter.notifyItemChanged(messageList.size() - 2);
             }
-        });
+        } else {
+            messageList.set(index, newMessage);
+            mMessageListLayoutManager.scrollToPosition(messageList.size() - 1);
+            mMessageAdapter.notifyItemChanged(index);
+        }
+
     }
 
+    private void sendMessage(final String chatKey) {
 
-    private void sendMessage(final String key) {
-        final DatabaseReference mChatDb= FirebaseDatabase.getInstance().getReference().child("Chats").child(key);
-        final FirebaseUser mUser= FirebaseAuth.getInstance().getCurrentUser();
+        final DatabaseReference mChatDb = FirebaseDatabase.getInstance().getReference().child("Chats").child(chatKey);
+        final FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        final DatabaseReference mUserDb=FirebaseDatabase.getInstance().getReference().child("Users");
+        final DatabaseReference mUserDb = FirebaseDatabase.getInstance().getReference().child("Users");
 
-        final HashMap<String,Object> newMessageMap=new HashMap<>();
+        final HashMap<String, Object> newMessageMap = new HashMap<>();
 
-        if(mUser!=null && (!mMessageText.getText().toString().equals("") || !mediaAdded.equals(""))){
+        if (mUser != null && (!mMessageText.getText().toString().equals("") || !mediaAdded.equals(""))) {
 
             final String messageId=mChatDb.child("Messages").push().getKey();
 
-
-            newMessageMap.put("Messages/"+messageId+"/Sender",mUser.getUid());
-
-            newMessageMap.put("info/Last Message",messageId);
-            if(!mMessageText.getText().toString().equals("")) {
-                newMessageMap.put("Messages/" + messageId + "/text", mMessageText.getText().toString());
-            }
-
-            Calendar calendar=Calendar.getInstance();
-            final Date date=calendar.getTime();
+            Calendar calendar = Calendar.getInstance();
+            final Date date = calendar.getTime();
             assert messageId != null;
 
+            SimpleDateFormat simpleDateFormatTime = new SimpleDateFormat("h:mm a");
+            String time = simpleDateFormatTime.format(date);
+            SimpleDateFormat simpleDateFormatDate = new SimpleDateFormat("EEE, MMM dd, yyyy");
+            String dateTemp = simpleDateFormatDate.format(date);
+
+            newMessageMap.put("Sender", mUser.getUid());
+            newMessageMap.put("Sender Phone", curUserPhone);
+            if (!mMessageText.getText().toString().equals("")) {
+                newMessageMap.put("text", mMessageText.getText().toString());
+            }
+            newMessageMap.put("timestamp", time.toUpperCase());
+            newMessageMap.put("date", dateTemp.toUpperCase());
 
 
-            SimpleDateFormat simpleDateFormatTime=new SimpleDateFormat("h:mm a");
-            String time=simpleDateFormatTime.format(date);
-            SimpleDateFormat simpleDateFormatDate=new SimpleDateFormat("EEE, MMM dd, yyyy");
-            String dateTemp=simpleDateFormatDate.format(date);
-
+            if (!mediaAdded.equals("")) {
+                final StorageReference mediaStorage = FirebaseStorage.getInstance().getReference().child("ChatPhotos").child(chatKey).child(messageId);
+                UploadTask uploadTask = mediaStorage.putFile(Uri.parse(mediaAdded));
+                uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        mediaStorage.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                newMessageMap.put("Image Uri", uri.toString());
+                                mChatDb.child("Messages").child(messageId).updateChildren(newMessageMap);
+                                mChatDb.child("Messages").child(messageId).setPriority(-date.getTime());
+                                mChatDb.child("info").child("Last Message").setValue(messageId);
+                            }
+                        });
+                    }
+                });
+            } else {
+                mChatDb.child("Messages").child(messageId).updateChildren(newMessageMap);
+                mChatDb.child("Messages").child(messageId).setPriority(-date.getTime());
+                mChatDb.child("info").child("Last Message").setValue(messageId);
+            }
             mChatDb.child("info").child("user").addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    if(snapshot.exists()){
-                        for(DataSnapshot childSnapshot:snapshot.getChildren()){
-                            mUserDb.child(Objects.requireNonNull(childSnapshot.getKey())).child("chat").child(key).setValue(-date.getTime());
+                    if (snapshot.exists()) {
+                        for (DataSnapshot childSnapshot : snapshot.getChildren()) {
+                            mUserDb.child(Objects.requireNonNull(childSnapshot.getKey())).child("chat").child(chatKey).setValue(-date.getTime());
                         }
                     }
                 }
@@ -523,33 +526,10 @@ public class SpecificChatActivity extends AppCompatActivity {
 
                 }
             });
-
-
-            newMessageMap.put("Messages/"+messageId+"/timestamp",time.toUpperCase());
-            newMessageMap.put("Messages/"+messageId+"/date",dateTemp.toUpperCase());
-            if(!mediaAdded.equals("")){
-                final StorageReference mediaStorage=FirebaseStorage.getInstance().getReference().child("ChatPhotos").child(key).child(messageId);
-                UploadTask uploadTask= mediaStorage.putFile(Uri.parse(mediaAdded));
-                uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        mediaStorage.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                            @Override
-                            public void onSuccess(Uri uri) {
-                                newMessageMap.put("Messages/"+messageId+"/Image Uri",uri.toString());
-                                mChatDb.updateChildren(newMessageMap);
-                                mChatDb.child("Messages").child(messageId).setPriority(-date.getTime());
-                            }
-                        });
-                    }
-                });
-            }
-            else{
-                mChatDb.updateChildren(newMessageMap);
-                mChatDb.child("Messages").child(messageId).setPriority(-date.getTime());
-            }
             mMessageText.setText("");
-            mediaAdded="";
+            mediaAdded = "";
+
+
         }
     }
 
@@ -559,7 +539,8 @@ public class SpecificChatActivity extends AppCompatActivity {
         mMessageList.setHasFixedSize(false);
         mMessageList.setNestedScrollingEnabled(false);
 
-        mMessageAdapter= new MessageAdapter(messageList,this,curChatObject.getNumberOfUsers(),density);
+        mMessageAdapter = new MessageAdapter(messageList, this, curChatObject.getNumberOfUsers(), density);
+        mMessageAdapter.setHasStableIds(true);
         mMessageList.setAdapter(mMessageAdapter);
         mMessageListLayoutManager=new LinearLayoutManager(getApplicationContext(), RecyclerView.VERTICAL, false);
         mMessageList.setLayoutManager(mMessageListLayoutManager);
@@ -572,8 +553,6 @@ public class SpecificChatActivity extends AppCompatActivity {
         mAddMedia=findViewById(R.id.addMedia);
         onDateScrolling=findViewById(R.id.onScrollingDate);
     }
-
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -598,13 +577,14 @@ public class SpecificChatActivity extends AppCompatActivity {
                 break;
 
             case R.id.clearChat:
-                DatabaseReference mMessageDb=FirebaseDatabase.getInstance().getReference().child("Chats").child(chatKey).child("Messages");
-                mMessageDb.setValue(true);
+                DatabaseReference mMessageDb = FirebaseDatabase.getInstance().getReference().child("Chats").child(chatKey);
+                mMessageDb.child("Messages").setValue(true);
+                mMessageDb.child("info").child("Last Message").setValue(null);
                 recreate();
                 break;
 
             default:
-                Toast.makeText(getApplicationContext(),"sahi sahi select kar, zyaada dimaag mat chala",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "sahi sahi select kar, zyaada dimaag mat chala", Toast.LENGTH_SHORT).show();
                 break;
         }
         return true;

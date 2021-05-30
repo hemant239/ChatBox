@@ -1,9 +1,11 @@
 package com.hemant239.chatbox.message;
 
+import java.util.Objects;
+
 public class MessageObject {
 
 
-    String  messageId,
+    String messageId,
             text,
             senderId,
             senderName,
@@ -56,5 +58,18 @@ public class MessageObject {
 
     public String getDate() {
         return date;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MessageObject)) return false;
+        MessageObject that = (MessageObject) o;
+        return messageId.equals(that.messageId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(messageId);
     }
 }

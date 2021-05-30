@@ -11,7 +11,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -27,20 +26,19 @@ import java.util.Objects;
 
 public class CreateSingleChatActivity extends AppCompatActivity {
 
-    String  userKey,
-            curUserKey,
+    String userKey,
             userName,
-            curUserName,
+            userPhone,
             userImage,
-            curUserImage;
+            chatID;
+
+    UserObject curUser, user;
 
     Button mCancelButton;
 
-    ValueEventListener userEvent,
-                        chatEvent;
 
-    DatabaseReference   mUserDb,
-                        mChatDb;
+    DatabaseReference mUserDb,
+            mChatDb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,53 +47,43 @@ public class CreateSingleChatActivity extends AppCompatActivity {
 
         initializeViews();
 
-        curUserKey= Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
-        curUserName="";
-        curUserImage="";
+        curUser = AllChatsActivity.curUser;
+        user = (UserObject) getIntent().getSerializableExtra("userObject");
 
-        UserObject userObject= (UserObject) getIntent().getSerializableExtra("userObject");
-
-        assert userObject != null;
-        userKey=userObject.getUid();
-        userName=userObject.getName();
-        userImage=userObject.getProfileImageUri();
+        assert user != null;
+        userKey = user.getUid();
+        userName = user.getName();
+        userPhone = user.getPhoneNumber();
+        userImage = user.getProfileImageUri();
+        chatID = user.getChatID();
 
 
         mCancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mUserDb.removeEventListener(userEvent);
-                mChatDb.removeEventListener(chatEvent);
                 finish();
             }
         });
 
-        checkChat();
+
+        if (!chatID.equals("")) {
+            openChat(chatID);
+        } else {
+            checkChat();
+        }
+
 
     }
 
-
-
     private void checkChat() {
-        mUserDb= FirebaseDatabase.getInstance().getReference().child("Users").child(curUserKey);
-        mUserDb.addListenerForSingleValueEvent(userEvent=new ValueEventListener() {
+        mUserDb = FirebaseDatabase.getInstance().getReference().child("Users").child(curUser.getUid()).child("Single chats").child(userKey);
+        mUserDb.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if(snapshot.exists()){
-
-                    if(snapshot.child("Name").getValue()!=null){
-                        curUserName= Objects.requireNonNull(snapshot.child("Name").getValue()).toString();
-                    }
-                    if(snapshot.child("Profile Image Uri").getValue()!=null){
-                        curUserImage= Objects.requireNonNull(snapshot.child("Profile Image Uri").getValue()).toString();
-                    }
-
-                    if(snapshot.child("Single chats").child(userKey).getValue()!=null){
-                        openChat(Objects.requireNonNull(snapshot.child("Single chats").child(userKey).getValue()).toString());
-                    }
-                    else{
-                        createChat();
-                    }
+                if (snapshot.exists() && snapshot.getValue() != null) {
+                    openChat(Objects.requireNonNull(snapshot.getValue()).toString());
+                } else {
+                    createChat();
                 }
             }
 
@@ -107,41 +95,40 @@ public class CreateSingleChatActivity extends AppCompatActivity {
     }
 
     private void createChat() {
-        mChatDb= FirebaseDatabase.getInstance().getReference().child("Chats");
-        final String key= mChatDb.push().getKey();
-        HashMap<String,Object> mUserInfo=new HashMap<>();
+        mChatDb = FirebaseDatabase.getInstance().getReference().child("Chats");
+        final String key = mChatDb.push().getKey();
+        HashMap<String, Object> mUserInfo = new HashMap<>();
 
 
-        Date date= Calendar.getInstance().getTime();
+        Date date = Calendar.getInstance().getTime();
 
-        mUserInfo.put(userKey+"/Single chats/"+curUserKey,key);
-        mUserInfo.put(curUserKey+"/Single chats/"+userKey,key);
-        mUserInfo.put(curUserKey+"/chat/"+key,-date.getTime());
-        mUserInfo.put(userKey+"/chat/"+key,-date.getTime());
+        mUserInfo.put(userKey + "/Single chats/" + curUser.getUid(), key);
+        mUserInfo.put(curUser.getUid() + "/Single chats/" + userKey, key);
+//        mUserInfo.put(curUser.getUid()+"/chat/"+key,-date.getTime());
+//        mUserInfo.put(userKey+"/chat/"+key,-date.getTime());
 
         FirebaseDatabase.getInstance().getReference().child("Users").updateChildren(mUserInfo);
 
-        HashMap<String,Object> mChatInfo=new HashMap<>();
+        HashMap<String, Object> mChatInfo = new HashMap<>();
 
-        mChatInfo.put("ID",key);
-        mChatInfo.put("isSingleChat",true);
-        mChatInfo.put(userKey+"/Name",curUserName);
-        mChatInfo.put(curUserKey+"/Name",userName);
-        mChatInfo.put("Number Of Users",1);
-        mChatInfo.put(userKey+"/Chat Profile Image Uri",curUserImage);
-        mChatInfo.put(curUserKey+"/Chat Profile Image Uri",userImage);
-        mChatInfo.put("user/"+curUserKey,true);
-        mChatInfo.put("user/"+userKey,true);
+        mChatInfo.put("ID", key);
+        mChatInfo.put("isSingleChat", true);
+        mChatInfo.put("Number Of Users", 1);
+        mChatInfo.put("user/" + curUser.getUid(), true);
+        mChatInfo.put("user/" + userKey, true);
+        mChatInfo.put(userKey + "/Name", curUser.getPhoneNumber());
+        mChatInfo.put(curUser.getUid() + "/Name", userPhone);
+        mChatInfo.put(userKey + "/Chat Profile Image Uri", curUser.getProfileImageUri());
+        mChatInfo.put(curUser.getUid() + "/Chat Profile Image Uri", userImage);
 
 
         assert key != null;
         mChatDb.child(key).child("info").updateChildren(mChatInfo).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
-                if(task.isSuccessful()) {
+                if (task.isSuccessful()) {
                     openChat(key);
-                }
-                else{
+                } else {
                     Toast.makeText(getApplicationContext(),"chat loading failed",Toast.LENGTH_SHORT).show();
                     finish();
                 }
@@ -150,34 +137,20 @@ public class CreateSingleChatActivity extends AppCompatActivity {
     }
 
     private void openChat(final String chatKey) {
-        mChatDb=FirebaseDatabase.getInstance().getReference().child("Chats").child(chatKey).child("info");
-        mChatDb.addListenerForSingleValueEvent(chatEvent=new ValueEventListener() {
+        mChatDb = FirebaseDatabase.getInstance().getReference().child("Chats").child(chatKey).child("info").child("Last Message");
+        mChatDb.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if(snapshot.exists()){
-                    String chatName="";
-                    String imageUri="";
-                    String lastMessageId="";
-
-                    if(snapshot.child(curUserKey).child("Name").getValue()!=null){
-                        chatName= Objects.requireNonNull(snapshot.child(curUserKey).child("Name").getValue()).toString();
-                    }
-                    if(snapshot.child(curUserKey).child("Chat Profile Image Uri").getValue()!=null){
-                        imageUri= Objects.requireNonNull(snapshot.child(curUserKey).child("Chat Profile Image Uri").getValue()).toString();
-                    }
-                    if(snapshot.child("Last Message").getValue()!=null){
-                        lastMessageId= Objects.requireNonNull(snapshot.child("Last Message").getValue()).toString();
-                    }
-
-
-                    ChatObject chatObject=new ChatObject(chatKey,chatName,imageUri,lastMessageId,1,true);
-
-                    Intent intent=new Intent(getApplicationContext(),SpecificChatActivity.class);
-                    intent.putExtra("chatObject",chatObject);
-                    startActivity(intent);
-                    ((CreateNewChatActivity)CreateNewChatActivity.context).finish();
-                    finish();
+                String lastMessageId = "";
+                if (snapshot.exists() && snapshot.getValue() != null) {
+                    lastMessageId = Objects.requireNonNull(snapshot.getValue()).toString();
                 }
+                ChatObject chatObject = new ChatObject(chatKey, userName, userImage, lastMessageId, 1, true);
+                Intent intent = new Intent(getApplicationContext(), SpecificChatActivity.class);
+                intent.putExtra("chatObject", chatObject);
+                startActivity(intent);
+                ((CreateNewChatActivity) CreateNewChatActivity.context).finish();
+                finish();
             }
 
             @Override
@@ -187,7 +160,6 @@ public class CreateSingleChatActivity extends AppCompatActivity {
         });
 
     }
-
 
     private void initializeViews() {
         mCancelButton=findViewById(R.id.cancelChatLoadButton);

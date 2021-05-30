@@ -30,7 +30,9 @@ public class GroupDetailsActivity extends AppCompatActivity {
     ImageView mGroupImage;
     TextView mGroupName;
 
-    String image,key,name;
+    String image,
+            key,
+            name;
     RecyclerView mUserList;
     RecyclerView.Adapter<UserAdapter.ViewHolder> mUserListAdapter;
     RecyclerView.LayoutManager mUserListLayoutManager;
@@ -97,26 +99,34 @@ public class GroupDetailsActivity extends AppCompatActivity {
         FirebaseDatabase.getInstance().getReference().child("Users").child(userKey).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                String name="",
-                        phone="",
-                        image="",
-                        status="";
-                if(snapshot.exists()){
-                    if(snapshot.child("Name").getValue()!=null){
-                        name= Objects.requireNonNull(snapshot.child("Name").getValue()).toString();
+                String name = "",
+                        phone = "",
+                        imageUri = "",
+                        status = "",
+                        chatID = "";
+                if(snapshot.exists()) {
+                    if (snapshot.child("Name").getValue() != null) {
+                        name = Objects.requireNonNull(snapshot.child("Name").getValue()).toString();
                     }
-                    if(snapshot.child("Phone Number").getValue()!=null){
-                        phone= Objects.requireNonNull(snapshot.child("Phone Number").getValue()).toString();
-                    }if(snapshot.child("Profile Image Uri").getValue()!=null){
-                        image= Objects.requireNonNull(snapshot.child("Profile Image Uri").getValue()).toString();
+                    if (snapshot.child("Phone Number").getValue() != null) {
+                        phone = Objects.requireNonNull(snapshot.child("Phone Number").getValue()).toString();
                     }
-                    if(snapshot.child("Status").getValue()!=null){
-                        status= Objects.requireNonNull(snapshot.child("Status").getValue()).toString();
+                    if (snapshot.child("Profile Image Uri").getValue() != null) {
+                        imageUri = Objects.requireNonNull(snapshot.child("Profile Image Uri").getValue()).toString();
+                    }
+                    if (snapshot.child("Status").getValue() != null) {
+                        status = Objects.requireNonNull(snapshot.child("Status").getValue()).toString();
                     }
 
-                    UserObject userObject=new UserObject(userKey,name,phone,status,image);
+                    name = phone;
+                    if (AllChatsActivity.allContacts.get(phone) != null) {
+                        name = Objects.requireNonNull(AllChatsActivity.allContacts.get(phone)).getName();
+                        chatID = Objects.requireNonNull(AllChatsActivity.allContacts.get(phone)).getChatID();
+                    }
+
+                    UserObject userObject = new UserObject(userKey, name, phone, status, imageUri, chatID);
                     userList.add(userObject);
-                    mUserListAdapter.notifyItemInserted(userList.size()-1);
+                    mUserListAdapter.notifyItemInserted(userList.size() - 1);
                 }
             }
 
@@ -125,8 +135,6 @@ public class GroupDetailsActivity extends AppCompatActivity {
 
             }
         });
-
-
     }
 
 
@@ -151,6 +159,9 @@ public class GroupDetailsActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case android.R.id.home:
                 onBackPressed();
+                break;
+
+            case 100:
                 break;
 
             default:

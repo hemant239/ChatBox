@@ -28,10 +28,17 @@ import com.hemant239.chatbox.chat.ChatAdapter;
 import com.hemant239.chatbox.chat.ChatObject;
 import com.hemant239.chatbox.user.UserObject;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Objects;
 
 public class AllChatsActivity extends AppCompatActivity {
@@ -43,27 +50,44 @@ public class AllChatsActivity extends AppCompatActivity {
 
     ArrayList<ChatObject> chatList;
 
-    DatabaseReference mUserDB, mChatDB;
-
-    static UserObject curUser;
-
+    public static UserObject curUser;
+    static HashMap<String, UserObject> allContacts;
     static Context context;
     String curDate;
-
+    DatabaseReference mUserDB;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_all_chats);
-
-
-        if (getIntent().getBooleanExtra("First time", false)) {
-            requestUserPermission();
-        }
-
         context = this;
         curUser = new UserObject();
-        getCurUserDetails();
+        curUser = (UserObject) getIntent().getSerializableExtra("curUser");
+
+
+        allContacts = new HashMap<>();
+        if (getIntent().getBooleanExtra("First time", false)) {
+            requestUserPermission();
+        } else {
+            File contactsFile = new File(context.getFilesDir(), "contacts.ser");
+            try {
+                FileInputStream contactFileInputStream = new FileInputStream(contactsFile);
+                ObjectInputStream contactObjectInputStream = new ObjectInputStream(contactFileInputStream);
+                allContacts = (HashMap<String, UserObject>) contactObjectInputStream.readObject();
+                contactObjectInputStream.close();
+                contactFileInputStream.close();
+
+
+                AllContacts contacts = new AllContacts(context, allContacts);
+                contacts.getAllContacts();
+
+
+            } catch (IOException | ClassNotFoundException e) {
+                Toast.makeText(getApplicationContext(), "no file", Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            }
+        }
+
 
         Date date = Calendar.getInstance().getTime();
         SimpleDateFormat simpleDateFormatDate = new SimpleDateFormat("EEE, MMM dd, yyyy");
@@ -75,40 +99,33 @@ public class AllChatsActivity extends AppCompatActivity {
         getChatList();
     }
 
-    private void getCurUserDetails() {
-        final String userKey = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
-        FirebaseDatabase.getInstance().getReference().child("Users").child(userKey).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    String userName = "";
-                    String userPhone = "";
-                    String userImage = "";
-                    String userStatus = "";
 
-                    if (snapshot.child("Name").getValue() != null) {
-                        userName = Objects.requireNonNull(snapshot.child("Name").getValue()).toString();
-                    }
-                    if (snapshot.child("Phone Number").getValue() != null) {
-                        userPhone = Objects.requireNonNull(snapshot.child("Phone Number").getValue()).toString();
-                    }
-                    if (snapshot.child("Profile Image Uri").getValue() != null) {
-                        userImage = Objects.requireNonNull(snapshot.child("Profile Image Uri").getValue()).toString();
-                    }
-                    if (snapshot.child("Status").getValue() != null) {
-                        userStatus = Objects.requireNonNull(snapshot.child("Status").getValue()).toString();
-                    }
-                    curUser = new UserObject(userKey, userName, userPhone, userStatus, userImage);
-                }
-            }
+    @Override
+    protected void onDestroy() {
+        File contactFile = new File(context.getFilesDir(), "contacts.ser");
+        File userFile = new File(context.getFilesDir(), "user.ser");
+        try {
+            FileOutputStream contactFileOutputStream = new FileOutputStream(contactFile);
+            ObjectOutputStream contactObjectOutputStream = new ObjectOutputStream(contactFileOutputStream);
+            contactObjectOutputStream.writeObject(allContacts);
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
+            contactObjectOutputStream.flush();
+            contactObjectOutputStream.close();
+            contactFileOutputStream.close();
 
-            }
-        });
+            FileOutputStream userFileOutputStream = new FileOutputStream(userFile);
+            ObjectOutputStream userObjectOutputStream = new ObjectOutputStream(userFileOutputStream);
+            userObjectOutputStream.writeObject(curUser);
 
+            userObjectOutputStream.flush();
+            userObjectOutputStream.close();
+            userFileOutputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        super.onDestroy();
     }
+
 
     private void getChatList() {
 
@@ -145,137 +162,183 @@ public class AllChatsActivity extends AppCompatActivity {
 
                 }
             });
-
         }
-
-
     }
 
     private void getChatDetails(final String key) {
-        mChatDB=FirebaseDatabase.getInstance().getReference().child("Chats").child(key);
-        mChatDB.addValueEventListener(new ValueEventListener() {
+        final DatabaseReference chatDb = FirebaseDatabase.getInstance().getReference().child("Chats").child(key);
+        chatDb.child("info").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if(snapshot.exists()){
-                    final String[] name = {""};
-                    String imageUri="";
-                    final String lastMessageId;
-                    String lastSenderId;
-                    final String[] lastSenderName = {""};
-                    String lastMessageText="Photo";
-                    String lastMessageTime="";
-                    int numberOfUsers=0;
-                    boolean isSingleChat=false;
+            public void onDataChange(@NonNull final DataSnapshot snapshot) {
 
+                final String[] name = {""};
+                final String[] imageUri = {""};
+                final int[] numberOfUsers = {0};
+                boolean isSingleChat = false;
+                String curUserKey = curUser.getUid();
 
-                    String curUserKey= Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
-                    if(snapshot.child("info").child("isSingleChat").getValue()!=null){
-                        isSingleChat= true;
-                    }
-
-                    if(snapshot.child("info").child("Name").getValue()!=null){
-                        name[0] = Objects.requireNonNull(snapshot.child("info").child("Name").getValue()).toString();
-                    }
-
-                    if(isSingleChat && snapshot.child("info").child(curUserKey).child("Name").getValue()!=null){
-                        name[0] = Objects.requireNonNull(snapshot.child("info").child(curUserKey).child("Name").getValue()).toString();
-                    }
-
-                    if(snapshot.child("info").child("Chat Profile Image Uri").getValue()!=null){
-                        imageUri= Objects.requireNonNull(snapshot.child("info").child("Chat Profile Image Uri").getValue()).toString();
-                    }
-
-                    if(isSingleChat && snapshot.child("info").child(curUserKey).child("Chat Profile Image Uri").getValue()!=null){
-                        imageUri = Objects.requireNonNull(snapshot.child("info").child(curUserKey).child("Chat Profile Image Uri").getValue()).toString();
-                    }
-
-                    if(snapshot.child("info").child("Number Of Users").getValue()!=null){
-                        numberOfUsers =Integer.parseInt(Objects.requireNonNull(snapshot.child("info").child("Number Of Users").getValue()).toString());
-                    }
-                    if(snapshot.child("info").child("Last Message").getValue()!=null) {
-                        lastMessageId = Objects.requireNonNull(snapshot.child("info").child("Last Message").getValue()).toString();
-
-                        if (snapshot.child("Messages").child(lastMessageId).child("text").getValue() != null) {
-                            lastMessageText = Objects.requireNonNull(snapshot.child("Messages").child(lastMessageId).child("text").getValue()).toString();
-                        }
-
-                        if (snapshot.child("Messages").child(lastMessageId).child("date").getValue() != null) {
-                            String lastMessageDate = Objects.requireNonNull(snapshot.child("Messages").child(lastMessageId).child("date").getValue()).toString();
-                            if (snapshot.child("Messages").child(lastMessageId).child("timestamp").getValue() != null) {
-                                lastMessageTime = Objects.requireNonNull(snapshot.child("Messages").child(lastMessageId).child("timestamp").getValue()).toString();
-                            }
-                            if (!lastMessageDate.equals(curDate)) {
-                                lastMessageTime = lastMessageTime + " " + lastMessageDate;
-                            }
-                        }
-
-
-                        if (snapshot.child("Messages").child(lastMessageId).child("Sender").getValue() != null) {
-                            lastSenderId = Objects.requireNonNull(snapshot.child("Messages").child(lastMessageId).child("Sender").getValue()).toString();
-                            DatabaseReference mUserDB = FirebaseDatabase.getInstance().getReference().child("Users").child(lastSenderId).child("Name");
-                            final String finalImageUri = imageUri;
-                            final String finalLastMessageText = lastMessageText;
-                            final String finalLastMessageTime = lastMessageTime;
-                            final int finalNumberOfUsers1 = numberOfUsers;
-                            final boolean finalIsSingleChat = isSingleChat;
-                            mUserDB.addValueEventListener(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(@NonNull DataSnapshot thisSnapshot) {
-                                    if(thisSnapshot.exists()){
-                                        if(thisSnapshot.getValue()!=null){
-                                            lastSenderName[0] = Objects.requireNonNull(thisSnapshot.getValue()).toString();
-                                            ChatObject chatObject=new ChatObject(key, name[0], finalImageUri, finalLastMessageText,lastSenderName[0], finalLastMessageTime, finalNumberOfUsers1,lastMessageId, finalIsSingleChat);
-                                            int indexOfObject=chatList.indexOf(chatObject);
-                                            if(indexOfObject==-1){
-                                                chatList.add(chatObject);
-                                                mChatListAdapter.notifyItemInserted(chatList.size()-1);
-                                            }
-                                            else{
-                                                chatList.remove(indexOfObject);
-                                                chatList.add(0, chatObject);
-                                                mChatListAdapter.notifyItemRangeChanged(0, indexOfObject + 1);
-                                            }
-
-
-                                        }
-                                    }
-
-                                }
-
-                                @Override
-                                public void onCancelled(@NonNull DatabaseError error) {
-                                    Toast.makeText(getApplicationContext(),"something went wrong, please try again later last Message Sender",Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                        }
-
-                        else{
-                            ChatObject chatObject=new ChatObject(key, name[0],imageUri,numberOfUsers,isSingleChat);
-                            chatList.add(chatObject);
-                            mChatListAdapter.notifyItemInserted(chatList.size()-1);
-                        }
-
-
-
-                    }
-
-                    else{
-                        ChatObject chatObject=new ChatObject(key, name[0],imageUri,numberOfUsers,isSingleChat);
-                        chatList.add(chatObject);
-                        mChatListAdapter.notifyItemInserted(chatList.size()-1);
-                    }
+                if (snapshot.child("isSingleChat").getValue() != null) {
+                    isSingleChat = true;
+                }
+                if (snapshot.child("Name").getValue() != null) {
+                    name[0] = Objects.requireNonNull(snapshot.child("Name").getValue()).toString();
+                }
+                if (snapshot.child("Chat Profile Image Uri").getValue() != null) {
+                    imageUri[0] = Objects.requireNonNull(snapshot.child("Chat Profile Image Uri").getValue()).toString();
+                }
+                if (snapshot.child(curUserKey).child("Name").getValue() != null) {
+                    name[0] = Objects.requireNonNull(snapshot.child(curUserKey).child("Name").getValue()).toString();
+                }
+                if (snapshot.child(curUserKey).child("Chat Profile Image Uri").getValue() != null) {
+                    imageUri[0] = Objects.requireNonNull(snapshot.child(curUserKey).child("Chat Profile Image Uri").getValue()).toString();
+                }
+                if (snapshot.child("Number Of Users").getValue() != null) {
+                    numberOfUsers[0] = Integer.parseInt(Objects.requireNonNull(snapshot.child("Number Of Users").getValue()).toString());
+                }
+                if (allContacts.get(name[0]) != null) {
+                    name[0] = Objects.requireNonNull(allContacts.get(name[0])).getName();
                 }
 
+                chatDb.child("info/Name").addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot nameSnapshot) {
+                        if (nameSnapshot.exists()) {
+                            ChatObject tempChat = new ChatObject(key);
+                            int indexOfChat = chatList.indexOf(tempChat);
+
+                            if (indexOfChat > -1) {
+                                chatList.get(indexOfChat).setName(Objects.requireNonNull(nameSnapshot.getValue()).toString());
+                                mChatListAdapter.notifyItemChanged(indexOfChat);
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+                chatDb.child("info").child(curUserKey).child("Chat Profile Image Uri").addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot imageSnapshot) {
+                        if (imageSnapshot.exists()) {
+                            ChatObject tempChat = new ChatObject(key);
+                            int indexOfChat = chatList.indexOf(tempChat);
+
+                            if (indexOfChat > -1) {
+                                chatList.get(indexOfChat).setImageUri(Objects.requireNonNull(imageSnapshot.getValue()).toString());
+                                mChatListAdapter.notifyItemChanged(indexOfChat);
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+                chatDb.child("info/Chat Profile Image Uri").addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot imageSnapshot) {
+                        if (imageSnapshot.exists()) {
+                            ChatObject tempChat = new ChatObject(key);
+                            int indexOfChat = chatList.indexOf(tempChat);
+                            if (indexOfChat > -1) {
+                                chatList.get(indexOfChat).setImageUri(Objects.requireNonNull(imageSnapshot.getValue()).toString());
+                                mChatListAdapter.notifyItemChanged(indexOfChat);
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+
+                final boolean finalIsSingleChat = isSingleChat;
+                chatDb.child("info").child("Last Message").addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot lastMessageSnapshot) {
+                        if (lastMessageSnapshot.exists()) {
+                            String lastMessageId = Objects.requireNonNull(lastMessageSnapshot.getValue()).toString();
+                            getMessageData(key, name[0], imageUri[0], numberOfUsers[0], finalIsSingleChat, lastMessageId);
+                        } else {
+                            ChatObject chatObject = new ChatObject(key, name[0], imageUri[0], numberOfUsers[0], finalIsSingleChat);
+                            chatList.add(chatObject);
+                            mChatListAdapter.notifyItemInserted(chatList.size() - 1);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(getApplicationContext(),"something went wrong, please try again later get chat details",Toast.LENGTH_SHORT).show();
+
             }
         });
-
     }
 
+    private void getMessageData(final String key, final String name, final String imageUri, final int numberOfUsers, final boolean finalIsSingleChat, final String lastMessageId) {
+        DatabaseReference messageDB = FirebaseDatabase.getInstance().getReference().child("Chats").child(key).child("Messages").child(lastMessageId);
+        messageDB.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    String lastSenderId = "";
+                    String lastSenderPhone = "";
+                    String lastMessageText = "Photo";
+                    String lastMessageTime = "";
+                    String lastMessageDate = "";
+
+                    if (snapshot.child("Sender").getValue() != null) {
+                        lastSenderId = Objects.requireNonNull(snapshot.child("Sender").getValue()).toString();
+                    }
+                    if (snapshot.child("Sender Phone").getValue() != null) {
+                        lastSenderPhone = Objects.requireNonNull(snapshot.child("Sender Phone").getValue()).toString();
+                    }
+                    if (snapshot.child("text").getValue() != null) {
+                        lastMessageText = Objects.requireNonNull(snapshot.child("text").getValue()).toString();
+                    }
+                    if (snapshot.child("timestamp").getValue() != null) {
+                        lastMessageTime = Objects.requireNonNull(snapshot.child("timestamp").getValue()).toString();
+                    }
+                    if (snapshot.child("date").getValue() != null) {
+                        lastMessageDate = Objects.requireNonNull(snapshot.child("date").getValue()).toString();
+                    }
+                    if (!lastMessageDate.equals(curDate)) {
+                        lastMessageTime = lastMessageTime + " " + lastMessageDate;
+                    }
+                    if (allContacts.get(lastSenderPhone) != null) {
+                        lastSenderPhone = Objects.requireNonNull(allContacts.get(lastSenderPhone)).getPhoneNumber();
+                    }
+
+                    ChatObject chatObject = new ChatObject(key, name, imageUri, lastMessageText, lastSenderPhone, lastSenderId, lastMessageTime, numberOfUsers, lastMessageId, finalIsSingleChat);
+                    int indexOfObject = chatList.indexOf(chatObject);
+                    if (indexOfObject == -1) {
+                        chatList.add(chatObject);
+                        mChatListAdapter.notifyItemInserted(chatList.size() - 1);
+                    } else {
+                        chatList.remove(indexOfObject);
+                        chatList.add(0, chatObject);
+                        mChatListAdapter.notifyItemRangeChanged(0, indexOfObject + 1);
+                    }
+                } else {
+                    getMessageData(key, name, imageUri, numberOfUsers, finalIsSingleChat, lastMessageId);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
 
 
     private void requestUserPermission() {
@@ -291,6 +354,8 @@ public class AllChatsActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "you didn't give the permission to access the contacts, So Fuck Off", Toast.LENGTH_LONG).show();
                 finish();
             }
+            AllContacts contacts = new AllContacts(context, allContacts);
+            contacts.getAllContacts();
         }
     }
 
@@ -318,8 +383,6 @@ public class AllChatsActivity extends AppCompatActivity {
         finish();
     }
 
-
-
     private void initializeViews() {
     }
     private void initializeRecyclerViews() {
@@ -331,8 +394,8 @@ public class AllChatsActivity extends AppCompatActivity {
         mChatList.addItemDecoration(new DividerItemDecoration(mChatList.getContext(),DividerItemDecoration.VERTICAL));
 
 
-
-        mChatListAdapter= new ChatAdapter(chatList,this);
+        mChatListAdapter = new ChatAdapter(chatList, this);
+        mChatListAdapter.setHasStableIds(true);
         mChatList.setAdapter(mChatListAdapter);
 
         mChatListLayoutManager=new LinearLayoutManager(getApplicationContext(),RecyclerView.VERTICAL,false);

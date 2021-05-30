@@ -4,46 +4,52 @@ import java.io.Serializable;
 
 public class UserObject implements Serializable {
 
-    private String  uid,
-                    name,
-                    phoneNumber,
-                    status,
-                    profileImageUri;
+    private String uid,
+            name,
+            phoneNumber,
+            status,
+            profileImageUri,
+            chatID;
 
-    private boolean isSelected=false;
+    private boolean isSelected = false;
 
 
-    public UserObject(String uid,String name,String phoneNumber,String status,String profileImageUri){
-        this.uid            =uid;
-        this.name           =name;
-        this.phoneNumber    =phoneNumber;
-        this.status         =status;
-        this.profileImageUri=profileImageUri;
+    public UserObject() {
+        this.uid = "";
+        this.name = "";
+        this.phoneNumber = "";
+        this.status = "";
+        this.profileImageUri = "";
+        this.chatID = "";
+
+    }
+
+    public UserObject(String uid, String name, String phoneNumber, String chatID) {
+        this.uid = uid;
+        this.name = name;
+        this.phoneNumber = phoneNumber;
+        this.chatID = chatID;
+    }
+
+    public UserObject(String uid, String name, String phoneNumber, String status, String chatID) {
+        this.uid = uid;
+        this.name = name;
+        this.phoneNumber = phoneNumber;
+        this.status = status;
+        this.profileImageUri = "";
+        this.chatID = chatID;
+    }
+
+    public UserObject(String uid, String name, String phoneNumber, String status, String profileImageUri, String chatID) {
+        this.uid = uid;
+        this.name = name;
+        this.phoneNumber = phoneNumber;
+        this.status = status;
+        this.profileImageUri = profileImageUri;
+        this.chatID = chatID;
     }
 
 
-
-    public UserObject(String uid,String name,String phoneNumber,String status){
-        this.uid            =uid;
-        this.name           =name;
-        this.phoneNumber    =phoneNumber;
-        this.status         =status;
-        this.profileImageUri="";
-    }
-
-    public UserObject(String name, String phoneNumber){
-        this.name           =name;
-        this.phoneNumber    =phoneNumber;
-    }
-
-    public UserObject(){
-        this.uid            ="";
-        this.name           ="";
-        this.phoneNumber    ="";
-        this.status         ="";
-        this.profileImageUri="";
-
-    }
 
 
     public String getUid() {
@@ -64,6 +70,14 @@ public class UserObject implements Serializable {
 
     public String getProfileImageUri() {
         return profileImageUri;
+    }
+
+    public String getChatID() {
+        return chatID;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public void setStatus(String status) {

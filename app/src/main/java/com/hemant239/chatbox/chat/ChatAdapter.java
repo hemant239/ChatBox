@@ -46,10 +46,9 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         final ChatObject chatObject=mChatList.get(position);
-
         holder.mChatName.setText(chatObject.getName());
 
-        if(chatObject.isSingleChat() ){
+        if (chatObject.isSingleChat() || chatObject.getLastSenderId().equals(AllChatsActivity.curUser.getUid())) {
             holder.mLastSender.setVisibility(View.GONE);
             holder.mColon.setVisibility(View.GONE);
         }
@@ -60,10 +59,11 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
             holder.mLastMessageTime.setText(chatObject.getLastMessageTime());
         }
 
-
-        if(!chatObject.getImageUri().equals("")){
+        if (!chatObject.getImageUri().equals("")) {
             holder.mChatImage.setClipToOutline(true);
             Glide.with(context).load(Uri.parse(chatObject.getImageUri())).into(holder.mChatImage);
+        } else {
+            holder.mChatImage.setImageResource(R.drawable.ic_baseline_person_24);
         }
         holder.mChatImage.setOnClickListener(new View.OnClickListener() {
             @Override
