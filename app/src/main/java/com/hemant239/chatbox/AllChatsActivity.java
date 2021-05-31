@@ -77,7 +77,6 @@ public class AllChatsActivity extends AppCompatActivity {
                 contactObjectInputStream.close();
                 contactFileInputStream.close();
 
-
                 AllContacts contacts = new AllContacts(context, allContacts);
                 contacts.getAllContacts();
 
@@ -101,7 +100,7 @@ public class AllChatsActivity extends AppCompatActivity {
 
 
     @Override
-    protected void onDestroy() {
+    protected void onStop() {
         File contactFile = new File(context.getFilesDir(), "contacts.ser");
         File userFile = new File(context.getFilesDir(), "user.ser");
         try {
@@ -123,9 +122,9 @@ public class AllChatsActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        super.onDestroy();
-    }
+        super.onStop();
 
+    }
 
     private void getChatList() {
 
@@ -315,7 +314,7 @@ public class AllChatsActivity extends AppCompatActivity {
                         lastMessageTime = lastMessageTime + " " + lastMessageDate;
                     }
                     if (allContacts.get(lastSenderPhone) != null) {
-                        lastSenderPhone = Objects.requireNonNull(allContacts.get(lastSenderPhone)).getPhoneNumber();
+                        lastSenderPhone = Objects.requireNonNull(allContacts.get(lastSenderPhone)).getName();
                     }
 
                     ChatObject chatObject = new ChatObject(key, name, imageUri, lastMessageText, lastSenderPhone, lastSenderId, lastMessageTime, numberOfUsers, lastMessageId, finalIsSingleChat);

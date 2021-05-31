@@ -435,7 +435,7 @@ public class SpecificChatActivity extends AppCompatActivity {
             date = Objects.requireNonNull(snapshot.child("date").getValue()).toString();
         }
         if (AllChatsActivity.allContacts.get(senderPhone) != null) {
-            senderPhone = Objects.requireNonNull(AllChatsActivity.allContacts.get(senderPhone)).getPhoneNumber();
+            senderPhone = Objects.requireNonNull(AllChatsActivity.allContacts.get(senderPhone)).getName();
         }
 
         MessageObject newMessage = new MessageObject(messageKey, text, imageUri, senderId, senderPhone, time, date);
