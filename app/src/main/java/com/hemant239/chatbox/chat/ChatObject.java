@@ -96,6 +96,9 @@ public class ChatObject implements Serializable {
         return isSingleChat;
     }
 
+    public void setLastMessageText(String lastMessageText) {
+        this.lastMessageText = lastMessageText;
+    }
 
     public void setName(String name) {
         this.name = name;
@@ -118,4 +121,5 @@ public class ChatObject implements Serializable {
     public int hashCode() {
         return Objects.hash(uid);
     }
+
 }

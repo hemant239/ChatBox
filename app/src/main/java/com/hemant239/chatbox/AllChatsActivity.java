@@ -44,7 +44,7 @@ import java.util.Objects;
 public class AllChatsActivity extends AppCompatActivity {
 
 
-    private static RecyclerView.Adapter<ChatAdapter.ViewHolder> mChatListAdapter;
+    public static RecyclerView.Adapter<ChatAdapter.ViewHolder> mChatListAdapter;
     RecyclerView mChatList;
     RecyclerView.LayoutManager mChatListLayoutManager;
 
@@ -52,7 +52,7 @@ public class AllChatsActivity extends AppCompatActivity {
 
     public static UserObject curUser;
     static HashMap<String, UserObject> allContacts;
-    static Context context;
+    public static Context context;
     String curDate;
     DatabaseReference mUserDB;
 
@@ -256,16 +256,24 @@ public class AllChatsActivity extends AppCompatActivity {
                 });
 
                 final boolean finalIsSingleChat = isSingleChat;
-                chatDb.child("info").child("Last Message").addValueEventListener(new ValueEventListener() {
+                chatDb.child("info/user/" + curUserKey).addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot lastMessageSnapshot) {
-                        if (lastMessageSnapshot.exists()) {
+                        if (lastMessageSnapshot.exists() && !lastMessageSnapshot.getValue().toString().equals("true")) {
                             String lastMessageId = Objects.requireNonNull(lastMessageSnapshot.getValue()).toString();
                             getMessageData(key, name[0], imageUri[0], numberOfUsers[0], finalIsSingleChat, lastMessageId);
                         } else {
+                            ChatObject tempChat = new ChatObject(key);
+                            int indexOfChat = chatList.indexOf(tempChat);
                             ChatObject chatObject = new ChatObject(key, name[0], imageUri[0], numberOfUsers[0], finalIsSingleChat);
-                            chatList.add(chatObject);
-                            mChatListAdapter.notifyItemInserted(chatList.size() - 1);
+                            if (indexOfChat > -1) {
+                                chatList.set(indexOfChat, chatObject);
+                                mChatListAdapter.notifyItemChanged(indexOfChat);
+                            } else {
+                                chatList.add(chatObject);
+                                mChatListAdapter.notifyItemInserted(chatList.size() - 1);
+                            }
+
                         }
                     }
 
@@ -316,6 +324,41 @@ public class AllChatsActivity extends AppCompatActivity {
                     if (allContacts.get(lastSenderPhone) != null) {
                         lastSenderPhone = Objects.requireNonNull(allContacts.get(lastSenderPhone)).getName();
                     }
+
+                    if (snapshot.child("Deleted For Everyone").getValue() != null) {
+                        if (snapshot.child("Deleted For Everyone").getValue().toString().equals(curUser.getUid())) {
+                            lastMessageText = "You Deleted this Message";
+                        } else {
+                            lastMessageText = "This Message was Deleted";
+                        }
+                    }
+
+
+                    FirebaseDatabase.getInstance().getReference().child("Chats/" + key + "/Messages/" + lastMessageId + "/Deleted For Everyone").addValueEventListener(new ValueEventListener() {
+
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            if (snapshot.exists()) {
+                                ChatObject chatObject = new ChatObject(key);
+                                int indexOfChat = chatList.indexOf(chatObject);
+                                String deletedText = "This Message Was Deleted";
+                                if (snapshot.getValue().toString().equals(AllChatsActivity.curUser.getUid())) {
+                                    deletedText = "You Deleted This Message";
+                                }
+                                if (indexOfChat > -1 && lastMessageId.equals(chatList.get(indexOfChat).getLastMessageId())) {
+                                    chatList.get(indexOfChat).setLastMessageText(deletedText);
+                                    mChatListAdapter.notifyItemChanged(indexOfChat);
+                                }
+                            }
+
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+
+                        }
+                    });
+
 
                     ChatObject chatObject = new ChatObject(key, name, imageUri, lastMessageText, lastSenderPhone, lastSenderId, lastMessageTime, numberOfUsers, lastMessageId, finalIsSingleChat);
                     int indexOfObject = chatList.indexOf(chatObject);

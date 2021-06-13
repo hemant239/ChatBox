@@ -64,8 +64,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/lastMessageTime"
-                    android:layout_alignParentEnd="true"
-                    android:text="35 09 AM" />
+                    android:layout_alignParentEnd="true" />
 
             </RelativeLayout>
 
@@ -84,7 +83,6 @@
                     android:id="@+id/lastMessageSender"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Sender"
                     android:textStyle="bold"
                     android:textSize="14sp"/>
 
@@ -102,7 +100,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@id/colon"
-                    android:text="this is text "
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:textSize="14sp"/>

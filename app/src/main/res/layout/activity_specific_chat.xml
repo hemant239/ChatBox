@@ -3,7 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".SpecificChatActivity">
 
 
@@ -15,9 +14,8 @@
         android:text="TUE, APRIL 06, 2021"
         android:id="@+id/onScrollingDate"
         android:textSize="18sp"
-        android:background="@color/colorAccent"
+        android:background="@drawable/custom_background_message_info"
         android:fontFamily="sans-serif-black"
-        android:textColor="#CA2F2F"
         android:layout_alignParentTop="true"
         android:visibility="gone"/>
 

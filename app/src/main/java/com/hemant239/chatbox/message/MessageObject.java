@@ -7,34 +7,44 @@ public class MessageObject {
 
     String messageId,
             text,
+            imageUri,
             senderId,
             senderName,
-            imageUri,
             time,
             date;
 
+    long timeStamp;
 
-    public MessageObject(String messageId,String text,String imageUri,String senderId,String senderName, String time, String date) {
-        this.messageId=messageId;
-        this.text=text;
-        this.imageUri=imageUri;
-        this.senderId=senderId;
-        this.senderName=senderName;
-        this.time=time;
-        this.date=date;
+    boolean isInfo,
+            isDeletedForEveryone;
+
+
+    public MessageObject(String messageId) {
+        this.messageId = messageId;
     }
-
 
     public MessageObject() {
-                messageId  =null;
-                text=null;
-                senderId=null;
-                senderName=null;
-                imageUri=null;
-                time=null;
-                date=null;
+        messageId = null;
+        text = null;
+        senderId = null;
+        senderName = null;
+        imageUri = null;
+        time = null;
+        date = null;
     }
 
+    public MessageObject(String messageId, String text, String imageUri, String senderId, String senderName, String time, String date, long timeStamp, boolean isInfo, boolean isDeletedForEveryone) {
+        this.messageId = messageId;
+        this.text = text;
+        this.imageUri = imageUri;
+        this.senderId = senderId;
+        this.senderName = senderName;
+        this.time = time;
+        this.date = date;
+        this.timeStamp = timeStamp;
+        this.isInfo = isInfo;
+        this.isDeletedForEveryone = isDeletedForEveryone;
+    }
 
     public String getSenderName() {
         return senderName;
@@ -58,6 +68,34 @@ public class MessageObject {
 
     public String getDate() {
         return date;
+    }
+
+    public String getMessageId() {
+        return messageId;
+    }
+
+    public boolean isInfo() {
+        return isInfo;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
+
+    public void setImageUri(String imageUri) {
+        this.imageUri = imageUri;
+    }
+
+    public boolean isDeletedForEveryone() {
+        return isDeletedForEveryone;
+    }
+
+    public void setDeletedForEveryone(boolean deletedForEveryone) {
+        isDeletedForEveryone = deletedForEveryone;
+    }
+
+    public long getTimeStamp() {
+        return timeStamp;
     }
 
     @Override

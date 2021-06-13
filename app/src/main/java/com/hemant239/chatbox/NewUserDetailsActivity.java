@@ -33,7 +33,6 @@ public class NewUserDetailsActivity extends AppCompatActivity {
 
     ImageView mImage;
 
-
     String imageUri;
 
     Button mSubmit;
