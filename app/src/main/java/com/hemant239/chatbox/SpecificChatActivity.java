@@ -3,13 +3,16 @@ package com.hemant239.chatbox;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,7 +24,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -37,28 +39,41 @@ import com.hemant239.chatbox.chat.ChatObject;
 import com.hemant239.chatbox.message.MessageAdapter;
 import com.hemant239.chatbox.message.MessageObject;
 import com.hemant239.chatbox.user.UserObject;
+import com.onesignal.OneSignal;
 
+import org.json.JSONObject;
+
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.Scanner;
 
-public class SpecificChatActivity extends AppCompatActivity {
+public class SpecificChatActivity extends AppCompatActivity implements MessageAdapter.OnItemDoubleClickListener {
 
     EditText mMessageText;
     Button mSendMessage,
             mAddMedia;
 
-    TextView chatName;
-    ImageView chatPhoto;
+    public static RecyclerView.LayoutManager mMessageListLayoutManager;
+    TextView chatName,
+            mTaggedSender,
+            mTaggedText;
+    ImageView chatPhoto,
+            mTaggedImage;
+    RelativeLayout taggedLayout;
+    Button cancelTagged;
 
     TextView onDateScrolling;
 
     RecyclerView mMessageList;
     public static RecyclerView.Adapter<MessageAdapter.ViewHolder> mMessageAdapter;
-    RecyclerView.LayoutManager mMessageListLayoutManager;
+    int taggedPosition = -1;
 
     ArrayList<MessageObject> messageList;
 
@@ -76,56 +91,54 @@ public class SpecificChatActivity extends AppCompatActivity {
 
     float density;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_specific_chat);
+
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
 
         Objects.requireNonNull(getSupportActionBar()).setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
         getSupportActionBar().setDisplayShowCustomEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setCustomView(R.layout.app_bar_specific_chat);
-        View view=getSupportActionBar().getCustomView();
+        View view = getSupportActionBar().getCustomView();
 
-        DisplayMetrics displayMetrics=new DisplayMetrics();
+        DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         density = displayMetrics.density;
 
         curUserPhone = AllChatsActivity.curUser.getPhoneNumber();
 
-        chatName=view.findViewById(R.id.chatAppName);
-        chatPhoto=view.findViewById(R.id.chatAppProfileImage);
+        chatName = view.findViewById(R.id.chatAppName);
+        chatPhoto = view.findViewById(R.id.chatAppProfileImage);
 
         chatPhoto.setClipToOutline(true);
 
-        userObject=new UserObject();
-        curChatObject= (ChatObject) getIntent().getSerializableExtra("chatObject");
+        userObject = new UserObject();
+        curChatObject = (ChatObject) getIntent().getSerializableExtra("chatObject");
         assert curChatObject != null;
-        chatKey=curChatObject.getUid();
+        chatKey = curChatObject.getUid();
 
         chatName.setText(curChatObject.getName());
-        if(curChatObject.getImageUri()!=null && !curChatObject.getImageUri().equals("")) {
+        if (curChatObject.getImageUri() != null && !curChatObject.getImageUri().equals("")) {
             Glide.with(getApplicationContext()).load(Uri.parse(curChatObject.getImageUri())).into(chatPhoto);
         }
-        chatPhoto.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent =new Intent(getApplicationContext(), ImageViewActivity.class);
-                intent.putExtra("URI",curChatObject.getImageUri());
-                startActivity(intent);
+        chatPhoto.setOnClickListener(v -> {
+            Intent intent = new Intent(getApplicationContext(), ImageViewActivity.class);
+            intent.putExtra("URI", curChatObject.getImageUri());
+            startActivity(intent);
 
-            }
         });
 
 
-
         initializeViews();
-        messageList=new ArrayList<>();
+        messageList = new ArrayList<>();
         initializeRecyclerViews(density);
 
-        final String curUserKey= Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+        final String curUserKey = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
 
 
         if(curChatObject.isSingleChat()){
@@ -148,26 +161,19 @@ public class SpecificChatActivity extends AppCompatActivity {
             });
 
 
-            chatName.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent=new Intent(getApplicationContext(), UserDetailsActivity.class);
-                    intent.putExtra("userObject",userObject);
-                    startActivity(intent);
-                }
+            chatName.setOnClickListener(v -> {
+                Intent intent = new Intent(getApplicationContext(), UserDetailsActivity.class);
+                intent.putExtra("userObject", userObject);
+                startActivity(intent);
             });
 
-        }
-        else{
-            chatName.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent=new Intent(getApplicationContext(), GroupDetailsActivity.class);
-                    intent.putExtra("Key",curChatObject.getUid());
-                    intent.putExtra("Name",curChatObject.getName());
-                    intent.putExtra("Image",curChatObject.getImageUri());
-                    startActivity(intent);
-                }
+        } else {
+            chatName.setOnClickListener(v -> {
+                Intent intent = new Intent(getApplicationContext(), GroupDetailsActivity.class);
+                intent.putExtra("Key", curChatObject.getUid());
+                intent.putExtra("Name", curChatObject.getName());
+                intent.putExtra("Image", curChatObject.getImageUri());
+                startActivity(intent);
             });
 
 
@@ -177,36 +183,33 @@ public class SpecificChatActivity extends AppCompatActivity {
 
         getMessageList(chatKey);
 
-        mSendMessage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sendMessage(chatKey);
-            }
-        });
+        mSendMessage.setOnClickListener(v -> sendMessage(chatKey));
 
-        mAddMedia.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                openGalleryToAddMedia();
-            }
-        });
+        mAddMedia.setOnClickListener(v -> openGalleryToAddMedia());
 
         mMessageList.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
-                if(newState==RecyclerView.SCROLL_STATE_IDLE){
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                     onDateScrolling.setVisibility(View.GONE);
-                }
-                else if(newState==RecyclerView.SCROLL_STATE_DRAGGING){
-                    int position=((LinearLayoutManager)mMessageListLayoutManager).findFirstCompletelyVisibleItemPosition();
-                    if(position>0) {
+                } else if (newState == RecyclerView.SCROLL_STATE_DRAGGING) {
+                    int position = ((LinearLayoutManager) mMessageListLayoutManager).findFirstCompletelyVisibleItemPosition();
+                    if (position > 0) {
                         onDateScrolling.setText(messageList.get(position).getDate());
                         onDateScrolling.setVisibility(View.VISIBLE);
                     }
                 }
             }
         });
+
+
+        cancelTagged.setOnClickListener(v -> {
+            taggedLayout.setVisibility(View.GONE);
+            taggedPosition = -1;
+        });
+
+
     }
 
     private void getUserDetails(final String userKey) {
@@ -219,6 +222,7 @@ public class SpecificChatActivity extends AppCompatActivity {
                     String userImage = "";
                     String userStatus = "";
                     String chatID = "";
+                    String notificationKey = "";
 
                     if (snapshot.child("Name").getValue() != null) {
                         userName = Objects.requireNonNull(snapshot.child("Name").getValue()).toString();
@@ -232,14 +236,16 @@ public class SpecificChatActivity extends AppCompatActivity {
                     if (snapshot.child("Status").getValue() != null) {
                         userStatus = Objects.requireNonNull(snapshot.child("Status").getValue()).toString();
                     }
+                    if (snapshot.child("notificationKey").getValue() != null) {
+                        notificationKey = Objects.requireNonNull(snapshot.child("notificationKey").getValue()).toString();
+                    }
 
                     userName = userPhone;
                     if (AllChatsActivity.allContacts.get(userPhone) != null) {
                         userName = Objects.requireNonNull(AllChatsActivity.allContacts.get(userPhone)).getName();
                         chatID = Objects.requireNonNull(AllChatsActivity.allContacts.get(userPhone)).getChatID();
                     }
-                    userObject = new UserObject(userKey, userName, userPhone, userStatus, userImage, chatID);
-
+                    userObject = new UserObject(userKey, userName, userPhone, userStatus, userImage, chatID, notificationKey);
                 }
             }
 
@@ -274,38 +280,30 @@ public class SpecificChatActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if(resultCode==RESULT_OK){
-            switch (requestCode){
+            switch (requestCode) {
                 case CHANGE_CHAT_PHOTO_CODE:
 
-                    profileStorage= FirebaseStorage.getInstance().getReference().child("ChatProfilePhotos").child(chatKey);
-                    final DatabaseReference mChatDb=FirebaseDatabase.getInstance().getReference().child("Chats").child(chatKey).child("info");
+                    profileStorage = FirebaseStorage.getInstance().getReference().child("ChatProfilePhotos").child(chatKey);
+                    final DatabaseReference mChatDb = FirebaseDatabase.getInstance().getReference().child("Chats").child(chatKey).child("info");
 
                     assert data != null;
-                    uploadTask=profileStorage.putFile(Objects.requireNonNull(data.getData()));
-                    Intent intent =new Intent(getApplicationContext(),LoadingActivity.class);
-                    intent.putExtra("message","Your Image is being uploaded \\n please wait");
-                    intent.putExtra("isNewUser",false);
-                    startActivityForResult(intent,CANCEL_UPLOAD_TASK);
-                    uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                            profileStorage.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                @Override
-                                public void onSuccess(Uri uri) {
-                                    mChatDb.child("Chat Profile Image Uri").setValue(uri.toString());
-                                    Glide.with(getApplicationContext()).load(uri).into((ImageView) findViewById(R.id.chatAppProfileImage));
-                                    ((LoadingActivity)LoadingActivity.context).finish();
-                                }
-                            });
-                        }
-                    });
+                    uploadTask = profileStorage.putFile(Objects.requireNonNull(data.getData()));
+                    Intent intent = new Intent(getApplicationContext(), LoadingActivity.class);
+                    intent.putExtra("message", "Your Image is being uploaded \\n please wait");
+                    intent.putExtra("isNewUser", false);
+                    startActivityForResult(intent, CANCEL_UPLOAD_TASK);
+                    uploadTask.addOnSuccessListener(taskSnapshot -> profileStorage.getDownloadUrl().addOnSuccessListener(uri -> {
+                        mChatDb.child("Chat Profile Image Uri").setValue(uri.toString());
+                        Glide.with(getApplicationContext()).load(uri).into((ImageView) findViewById(R.id.chatAppProfileImage));
+                        ((LoadingActivity) LoadingActivity.context).finish();
+                    }));
 
                     break;
 
 
                 case ADD_MEDIA_CODE:
                     assert data != null;
-                    mediaAdded= Objects.requireNonNull(data.getData()).toString();
+                    mediaAdded = Objects.requireNonNull(data.getData()).toString();
                     break;
 
                 case CANCEL_UPLOAD_TASK:
@@ -412,15 +410,23 @@ public class SpecificChatActivity extends AppCompatActivity {
     }
 
     private void getMessageData(final String messageKey, DataSnapshot snapshot, boolean isNewMessage, int index) {
-        String senderId = "";
-        String senderPhone = "";
-        String text = "";
-        String imageUri = "";
-        String time = "";
-        String date = "";
+        String senderId = "",
+                senderPhone = "",
+                senderName = "",
+                text = "",
+                imageUri = "",
+                time = "",
+                date = "",
+                taggedId = "",
+                taggedText = "",
+                taggedSender = "",
+                taggedImage = "";
+
+
         long timeStampLong = 0L;
         boolean isInfo = false;
         boolean isDeletedForEveryone = false;
+        boolean isTagged = false;
 
 
         if (snapshot.child("Sender").getValue() != null) {
@@ -444,12 +450,38 @@ public class SpecificChatActivity extends AppCompatActivity {
         if (snapshot.child("timestampLong").getValue() != null) {
             timeStampLong = Long.parseLong(Objects.requireNonNull(snapshot.child("timestampLong").getValue()).toString());
         }
-
         if (snapshot.child("isInfo").getValue() != null) {
             isInfo = true;
         }
+
+        if (snapshot.child("isTagged").getValue() != null) {
+            isTagged = true;
+            if (snapshot.child("taggedId").getValue() != null) {
+                taggedId = Objects.requireNonNull(snapshot.child("taggedId").getValue()).toString();
+            }
+            if (snapshot.child("taggedSender").getValue() != null) {
+                taggedSender = Objects.requireNonNull(snapshot.child("taggedSender").getValue()).toString();
+            }
+            if (snapshot.child("taggedText").getValue() != null) {
+                taggedText = Objects.requireNonNull(snapshot.child("taggedText").getValue()).toString();
+            }
+            if (snapshot.child("taggedImage").getValue() != null) {
+                taggedImage = Objects.requireNonNull(snapshot.child("taggedImage").getValue()).toString();
+            }
+
+            if (AllChatsActivity.allContacts.get(taggedSender) != null) {
+                taggedSender = Objects.requireNonNull(AllChatsActivity.allContacts.get(taggedSender)).getName();
+            } else if (curUserPhone.equals(taggedSender)) {
+                taggedSender = "You";
+            }
+        }
+
         if (AllChatsActivity.allContacts.get(senderPhone) != null) {
-            senderPhone = Objects.requireNonNull(AllChatsActivity.allContacts.get(senderPhone)).getName();
+            senderName = Objects.requireNonNull(AllChatsActivity.allContacts.get(senderPhone)).getName();
+        } else if (curUserPhone.equals(senderPhone)) {
+            senderName = "You";
+        } else {
+            senderName = String.valueOf(senderPhone);
         }
 
         if (snapshot.child("Deleted For Everyone").getValue() != null) {
@@ -476,6 +508,7 @@ public class SpecificChatActivity extends AppCompatActivity {
                         messageList.get(indexOfMessage).setText(deletedText);
                         messageList.get(indexOfMessage).setImageUri("");
                         messageList.get(indexOfMessage).setDeletedForEveryone(true);
+                        messageList.get(indexOfMessage).setTagged(false);
                         mMessageAdapter.notifyItemChanged(indexOfMessage);
                     }
                 }
@@ -489,7 +522,8 @@ public class SpecificChatActivity extends AppCompatActivity {
         });
 
 
-        MessageObject newMessage = new MessageObject(messageKey, text, imageUri, senderId, senderPhone, time, date, timeStampLong, isInfo, isDeletedForEveryone);
+        MessageObject newMessage = new MessageObject(messageKey, text, imageUri, senderId, senderPhone, senderName, time, date, timeStampLong,
+                isInfo, isDeletedForEveryone, isTagged, taggedId, taggedSender, taggedText, taggedImage);
 
         if (isNewMessage) {
             messageList.add(newMessage);
@@ -548,24 +582,37 @@ public class SpecificChatActivity extends AppCompatActivity {
             newMessageMap.put("timestamp", time.toUpperCase());
             newMessageMap.put("date", dateTemp.toUpperCase());
 
+            if (taggedPosition > -1) {
+                MessageObject taggedMessage = messageList.get(taggedPosition);
+
+                newMessageMap.put("isTagged", true);
+                newMessageMap.put("taggedId", taggedMessage.getMessageId());
+                newMessageMap.put("taggedSender", taggedMessage.getSenderPhone());
+                newMessageMap.put("taggedText", taggedMessage.getText());
+                newMessageMap.put("taggedImage", taggedMessage.getImageUri());
+
+
+                taggedPosition = -1;
+                taggedLayout.setVisibility(View.GONE);
+
+            }
+
+
+            String messageText = mMessageText.getText().toString();
+            if (messageText.equals("")) {
+                messageText = "Photo";
+            }
+            String finalMessageText = messageText;
 
             if (!mediaAdded.equals("")) {
                 assert messageId != null;
                 final StorageReference mediaStorage = FirebaseStorage.getInstance().getReference().child("ChatPhotos").child(chatKey).child(messageId);
                 UploadTask uploadTask = mediaStorage.putFile(Uri.parse(mediaAdded));
-                uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        mediaStorage.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                            @Override
-                            public void onSuccess(Uri uri) {
-                                newMessageMap.put("Image Uri", uri.toString());
-                                mChatDb.child("Messages").child(messageId).updateChildren(newMessageMap);
-                                mChatDb.child("Messages").child(messageId).setPriority(-date.getTime());
-                            }
-                        });
-                    }
-                });
+                uploadTask.addOnSuccessListener(taskSnapshot -> mediaStorage.getDownloadUrl().addOnSuccessListener(uri -> {
+                    newMessageMap.put("Image Uri", uri.toString());
+                    mChatDb.child("Messages").child(messageId).updateChildren(newMessageMap);
+                    mChatDb.child("Messages").child(messageId).setPriority(-date.getTime());
+                }));
             } else {
                 assert messageId != null;
                 mChatDb.child("Messages").child(messageId).updateChildren(newMessageMap);
@@ -578,8 +625,12 @@ public class SpecificChatActivity extends AppCompatActivity {
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     if (snapshot.exists()) {
                         for (DataSnapshot childSnapshot : snapshot.getChildren()) {
-                            mChatDb.child("info").child("user").child(Objects.requireNonNull(childSnapshot.getKey())).setValue(messageId);
+                            mChatDb.child("info/user/" + Objects.requireNonNull(childSnapshot.getKey()) + "/lastMessageId").setValue(messageId);
                             mUserDb.child(Objects.requireNonNull(childSnapshot.getKey())).child("chat").child(chatKey).setValue(-date.getTime());
+
+                            if (!childSnapshot.getKey().equals(AllChatsActivity.curUser.getUid()) && childSnapshot.child("notificationKey").getValue() != null) {
+                                sendNotification(AllChatsActivity.curUser, finalMessageText, mediaAdded, childSnapshot.getKey());
+                            }
                         }
                     }
                 }
@@ -589,6 +640,8 @@ public class SpecificChatActivity extends AppCompatActivity {
 
                 }
             });
+
+
             mMessageText.setText("");
             mediaAdded = "";
 
@@ -596,9 +649,74 @@ public class SpecificChatActivity extends AppCompatActivity {
         }
     }
 
+    private void sendNotification(UserObject curUser, String messageText, String imageUri, String externalUserId) {
+        try {
+            String jsonResponse;
+
+            URL url = new URL("https://onesignal.com/api/v1/notifications");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setUseCaches(false);
+            con.setDoOutput(true);
+            con.setDoInput(true);
+
+            con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+            con.setRequestProperty("Authorization", "Basic ZWVlMjJkNWItNjI0OS00ZjhiLWFiZTEtOWVhNmQ3MjZkOTlk");
+            con.setRequestMethod("POST");
+
+            String strJsonBody = "{"
+                    + "\"app_id\":\"c01d8a82-28eb-4d70-8242-4a6c33a4bdd4\","
+                    + "\"include_external_user_ids\":[\"" + externalUserId + "\"],"
+                    + "\"channel_for_external_user_ids\":\"push\","
+                    + "\"data\":{\"foo\":\"bar\"},"
+                    + "\"contents\":{\"en\":\"" + messageText + "\"},"
+                    + "\"headings\":{\"en\":\"" + curUserPhone + "\"}"
+                    + "}";
+
+
+            System.out.println("strJsonBody:\n" + strJsonBody);
+
+            byte[] sendBytes = strJsonBody.getBytes("UTF-8");
+            con.setFixedLengthStreamingMode(sendBytes.length);
+
+            OutputStream outputStream = con.getOutputStream();
+            outputStream.write(sendBytes);
+
+            int httpResponse = con.getResponseCode();
+            System.out.println("httpResponse: " + httpResponse);
+
+            if (httpResponse >= HttpURLConnection.HTTP_OK
+                    && httpResponse < HttpURLConnection.HTTP_BAD_REQUEST) {
+                Scanner scanner = new Scanner(con.getInputStream(), "UTF-8");
+                jsonResponse = scanner.useDelimiter("\\A").hasNext() ? scanner.next() : "";
+                scanner.close();
+            } else {
+                Scanner scanner = new Scanner(con.getErrorStream(), "UTF-8");
+                jsonResponse = scanner.useDelimiter("\\A").hasNext() ? scanner.next() : "";
+                scanner.close();
+            }
+            System.out.println("jsonResponse:\n" + jsonResponse);
+
+            OneSignal.postNotification(jsonResponse, new OneSignal.PostNotificationResponseHandler() {
+                @Override
+                public void onSuccess(JSONObject response) {
+                    Log.i("OneSignalExample", "postNotification Success: " + response.toString());
+                }
+
+                @Override
+                public void onFailure(JSONObject response) {
+                    Log.i("OneSignalExample", "postNotification failure: " + response.toString());
+                }
+            });
+
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+    }
+
+
     private void initializeRecyclerViews(float density) {
 
-        mMessageList=findViewById(R.id.recyclerViewListMessages);
+        mMessageList = findViewById(R.id.recyclerViewListMessages);
         mMessageList.setHasFixedSize(false);
         mMessageList.setNestedScrollingEnabled(false);
 
@@ -610,11 +728,17 @@ public class SpecificChatActivity extends AppCompatActivity {
     }
 
     private void initializeViews() {
-        
-        mMessageText=findViewById(R.id.messageText);
-        mSendMessage=findViewById(R.id.sendMessage);
-        mAddMedia=findViewById(R.id.addMedia);
-        onDateScrolling=findViewById(R.id.onScrollingDate);
+
+        mMessageText = findViewById(R.id.messageText);
+        mSendMessage = findViewById(R.id.sendMessage);
+        mAddMedia = findViewById(R.id.addMedia);
+        onDateScrolling = findViewById(R.id.onScrollingDate);
+
+        taggedLayout = findViewById(R.id.taggedLayout);
+        mTaggedImage = findViewById(R.id.taggedImage);
+        mTaggedSender = findViewById(R.id.taggedSender);
+        mTaggedText = findViewById(R.id.taggedText);
+        cancelTagged = findViewById(R.id.cancelTagged);
     }
 
     @Override
@@ -646,9 +770,29 @@ public class SpecificChatActivity extends AppCompatActivity {
                 break;
 
             default:
-                Toast.makeText(getApplicationContext(), "sahi sahi select kar, zyaada dimaag mat chala", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "please select proper option", Toast.LENGTH_SHORT).show();
                 break;
         }
         return true;
+    }
+
+    @Override
+    public void OnItemDoubleClicked(int position) {
+        MessageObject messageObject = messageList.get(position);
+
+        mTaggedSender.setText(messageObject.getSenderName());
+        String text = messageObject.getText();
+        if (text.equals("")) {
+            text = "photo";
+        }
+        mTaggedText.setText(text);
+        if (!messageObject.getImageUri().equals("")) {
+            mTaggedImage.setVisibility(View.VISIBLE);
+            Glide.with(getApplicationContext()).load(Uri.parse(messageObject.getImageUri())).into(mTaggedImage);
+        } else {
+            mTaggedImage.setVisibility(View.GONE);
+        }
+        taggedLayout.setVisibility(View.VISIBLE);
+        taggedPosition = position;
     }
 }

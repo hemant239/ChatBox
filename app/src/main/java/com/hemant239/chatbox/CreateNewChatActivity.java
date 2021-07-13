@@ -73,17 +73,14 @@ public class CreateNewChatActivity extends AppCompatActivity {
         }
 
         if(!isSingleChatActivity) {
-            mCreateChat.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (mChatName != null) {
-                        String s = mChatName.getText().toString().trim();
-                        if (s.length() != 0) {
-                            createChat();
-                            finish();
-                        } else {
-                            Toast.makeText(getApplicationContext(), "Give the name to the chat mf", Toast.LENGTH_SHORT).show();
-                        }
+            mCreateChat.setOnClickListener(v -> {
+                if (mChatName != null) {
+                    String s = mChatName.getText().toString().trim();
+                    if (s.length() != 0) {
+                        createChat();
+                        finish();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Give the name to the chat mf", Toast.LENGTH_SHORT).show();
                     }
                 }
             });
@@ -104,14 +101,18 @@ public class CreateNewChatActivity extends AppCompatActivity {
                         String userImage = "";
                         String userStatus = "";
                         String chatId = userObject.getChatID();
+                        String notificationKey = "";
                         if (snapshot.child("Profile Image Uri").getValue() != null) {
                             userImage = Objects.requireNonNull(snapshot.child("Profile Image Uri").getValue()).toString();
                         }
                         if (snapshot.child("Status").getValue() != null) {
                             userStatus = Objects.requireNonNull(snapshot.child("Status").getValue()).toString();
                         }
+                        if (snapshot.child("notificationKey").getValue() != null) {
+                            notificationKey = Objects.requireNonNull(snapshot.child("notificationKey").getValue()).toString();
+                        }
 
-                        UserObject newUser = new UserObject(userKey, userName, userPhone, userStatus, userImage, chatId);
+                        UserObject newUser = new UserObject(userKey, userName, userPhone, userStatus, userImage, chatId, notificationKey);
                         userList.add(newUser);
                         mUserListAdapter.notifyItemInserted(userList.size() - 1);
                     }
@@ -139,10 +140,12 @@ public class CreateNewChatActivity extends AppCompatActivity {
         int noOfUsers=1;
         Date date= Calendar.getInstance().getTime();
 
+        userList.add(AllChatsActivity.curUser);
         for(UserObject user:userList){
-            if(user.isSelected() && user.getUid()!=null){
+            if (user.isSelected() && user.getUid() != null) {
                 noOfUsers++;
-                mChatInfo.put("user/"+user.getUid(), true);
+                mChatInfo.put("user/" + user.getUid() + "/notificationKey", user.getNotificationKey());
+                mChatInfo.put("user/" + user.getUid() + "/lastMessageId", true);
                 mUserDB.child(user.getUid()).child("chat").child(key).setValue(-date.getTime());
             }
         }
@@ -150,17 +153,13 @@ public class CreateNewChatActivity extends AppCompatActivity {
         mChatInfo.put("ID",key);
         mChatInfo.put("Number Of Users",noOfUsers);
 
-
         FirebaseUser mUser= FirebaseAuth.getInstance().getCurrentUser();
         if(mUser!=null) {
-            mChatInfo.put("user/"+mUser.getUid(),true);
+            mChatInfo.put("user/" + mUser.getUid() + "/notificationKey", true);
+            mChatInfo.put("user/" + mUser.getUid() + "/lastMessageId", true);
             mUserDB.child(mUser.getUid()).child("chat").child(key).setValue(-date.getTime());
         }
-
-
         mChatDB.updateChildren(mChatInfo);
-
-
     }
 
     private void initializeViews() {

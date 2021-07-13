@@ -23,6 +23,7 @@ import com.hemant239.chatbox.AllChatsActivity;
 import com.hemant239.chatbox.ImageViewActivity;
 import com.hemant239.chatbox.R;
 import com.hemant239.chatbox.SpecificChatActivity;
+import com.hemant239.chatbox.utils.OnDoubleClickListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,6 +43,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
 
     Context context;
     RecyclerView mRecyclerView;
+
 
     public MessageAdapter(ArrayList<MessageObject> messageList, Context context, int numberOfUsers, float density, String chatKey) {
         this.messageList = messageList;
@@ -148,14 +150,25 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
 
                 }
 
+                if (curMessage.isTagged()) {
+                    RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) holder.taggedLayout.getLayoutParams();
+                    layoutParams.addRule(RelativeLayout.ALIGN_END, R.id.mediaImage);
+                    layoutParams.addRule(RelativeLayout.ALIGN_START, R.id.mediaImage);
+                    holder.taggedLayout.setLayoutParams(layoutParams);
 
-                holder.mediaImage.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Intent intent = new Intent(context, ImageViewActivity.class);
-                        intent.putExtra("URI", curMessage.getImageUri());
-                        context.startActivity(intent);
-                    }
+
+                    RelativeLayout.LayoutParams layoutParams1 = (RelativeLayout.LayoutParams) holder.taggedImage.getLayoutParams();
+                    layoutParams1.addRule(RelativeLayout.ALIGN_PARENT_END);
+                    layoutParams1.removeRule(RelativeLayout.END_OF);
+                    holder.taggedImage.setLayoutParams(layoutParams1);
+
+                }
+
+
+                holder.mediaImage.setOnClickListener(v -> {
+                    Intent intent = new Intent(context, ImageViewActivity.class);
+                    intent.putExtra("URI", curMessage.getImageUri());
+                    context.startActivity(intent);
                 });
                 Glide.with(context).load(Uri.parse(curMessage.getImageUri())).into(holder.mediaImage);
             } else {
@@ -168,45 +181,105 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
                 layoutParams.addRule(RelativeLayout.ALIGN_PARENT_END);
                 holder.relativeLayout.setLayoutParams(layoutParams);
                 holder.relativeLayout.setBackgroundResource(R.drawable.custom_background_message_receiver);
+                holder.taggedLayout.setBackgroundResource(R.drawable.custom_tagged_receiver);
             }
 
 
-            holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View v) {
-                    alertDialog = new AlertDialog.Builder(context)
-                            .setTitle("Delete this message?")
-                            .create();
-
-                    alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "Delete For Me", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            int holderPos = holder.getAdapterPosition();
-                            databaseDeleteForMe(curMessage.getMessageId(), position, holderPos);
-                        }
-                    });
-
-                    if (!curMessage.isDeletedForEveryone && curMessage.getSenderId().equals(userKey)) {
-                        alertDialog.setButton(DialogInterface.BUTTON_NEUTRAL, "Deleted For Everyone", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                databaseDeleteForEveryone(curMessage.getMessageId());
-                            }
-                        });
-                    }
-                    alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            alertDialog.dismiss();
-                        }
-                    });
-
-                    alertDialog.show();
-
-
-                    return true;
+            if (curMessage.isTagged()) {
+                holder.taggedLayout.setVisibility(View.VISIBLE);
+                holder.taggedSender.setText(curMessage.getTaggedSender());
+                String text = curMessage.getTaggedText();
+                if (text.equals("")) {
+                    text = "photo";
                 }
+                holder.taggedText.setText(text);
+
+                String image = curMessage.getTaggedImageUri();
+                if (!image.equals("")) {
+                    holder.taggedImage.setVisibility(View.VISIBLE);
+                    Glide.with(context).load(Uri.parse(curMessage.getTaggedImageUri())).into(holder.taggedImage);
+                } else {
+                    holder.taggedImage.setVisibility(View.GONE);
+                    holder.taggedText.setMaxWidth((int) (250 * density));
+                }
+
+
+                if (curMessage.getImageUri().equals("")) {
+                    holder.messageText.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+                    float messageWidth = holder.messageText.getMeasuredWidth() / density;
+                    holder.messageTime.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+                    float timeWidth = holder.messageTime.getMeasuredWidth() / density;
+                    holder.taggedLayout.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+                    float taggedWidth = holder.taggedLayout.getMeasuredWidth() / density;
+
+                    if (messageWidth + timeWidth > taggedWidth) {
+                        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) holder.taggedLayout.getLayoutParams();
+                        layoutParams.addRule(RelativeLayout.ALIGN_END, R.id.messageTime);
+                        layoutParams.addRule(RelativeLayout.ALIGN_START, R.id.messageText);
+                        holder.taggedLayout.setLayoutParams(layoutParams);
+
+
+                        RelativeLayout.LayoutParams layoutParams1 = (RelativeLayout.LayoutParams) holder.taggedImage.getLayoutParams();
+                        layoutParams1.addRule(RelativeLayout.ALIGN_PARENT_END);
+                        layoutParams1.removeRule(RelativeLayout.END_OF);
+                        holder.taggedImage.setLayoutParams(layoutParams1);
+                    } else {
+                        RelativeLayout.LayoutParams layoutParams1 = (RelativeLayout.LayoutParams) holder.messageTime.getLayoutParams();
+                        layoutParams1.addRule(RelativeLayout.ALIGN_END, R.id.messageTaggedLayout);
+                        layoutParams1.removeRule(RelativeLayout.END_OF);
+                        holder.messageTime.setLayoutParams(layoutParams1);
+
+                    }
+                }
+
+
+                holder.taggedLayout.setOnClickListener(v -> {
+                    MessageObject taggedMessage = new MessageObject(curMessage.getTaggedId());
+                    int indexOfTaggedMessage = messageList.indexOf(taggedMessage);
+                    if (indexOfTaggedMessage > -1) {
+                        SpecificChatActivity.mMessageListLayoutManager.scrollToPosition(indexOfTaggedMessage);
+                    }
+                });
+            }
+
+
+            holder.itemView.setOnLongClickListener(v -> {
+                alertDialog = new AlertDialog.Builder(context)
+                        .setTitle("Delete this message?")
+                        .create();
+
+                alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "Delete For Me", (dialog, which) -> {
+                    int holderPos = holder.getAdapterPosition();
+                    databaseDeleteForMe(curMessage.getMessageId(), position, holderPos);
+                });
+
+                if (!curMessage.isDeletedForEveryone && curMessage.getSenderId().equals(userKey)) {
+                    alertDialog.setButton(DialogInterface.BUTTON_NEUTRAL, "Deleted For Everyone", (dialog, which) -> databaseDeleteForEveryone(curMessage.getMessageId()));
+                }
+                alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", (dialog, which) -> alertDialog.dismiss());
+
+                alertDialog.show();
+
+
+                return true;
             });
+
+
+            OnDoubleClickListener onDoubleClickListener = new OnDoubleClickListener() {
+                @Override
+                public void onDoubleClick(View v) {
+                    ((SpecificChatActivity) context).OnItemDoubleClicked(position);
+                }
+
+                @Override
+                public void onSingleClick(View v) {
+                }
+            };
+
+            if (!curMessage.isDeletedForEveryone()) {
+                holder.itemView.setOnClickListener(onDoubleClickListener);
+            }
+
 
         }
     }
@@ -218,6 +291,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         messageInfo.put("Image Uri", "");
         messageInfo.put("Deleted For Everyone", userKey);
         mMessageDb.updateChildren(messageInfo);
+        mMessageDb.child("isTagged").setValue(null);
     }
 
     private void databaseDeleteForMe(String messageId, int position, int holderPos) {
@@ -259,14 +333,20 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
 
         if (nextHolderPos != getItemCount()) {
             nextHolder = (ViewHolder) mRecyclerView.findViewHolderForAdapterPosition(nextHolderPos);
-            while (nextHolder.relativeLayout.getVisibility() == View.GONE && nextHolderPos < getItemCount() - 1) {
+            while (true) {
+                assert nextHolder != null;
+                if (!(nextHolder.relativeLayout.getVisibility() == View.GONE && nextHolderPos < getItemCount() - 1))
+                    break;
                 nextHolderPos++;
                 nextHolder = (ViewHolder) mRecyclerView.findViewHolderForAdapterPosition(nextHolderPos);
             }
         }
         if (prevHolderPos != -1) {
             prevHolder = (ViewHolder) mRecyclerView.findViewHolderForAdapterPosition(prevHolderPos);
-            while (prevHolder.relativeLayout.getVisibility() == View.GONE && prevHolderPos > 0) {
+            while (true) {
+                assert prevHolder != null;
+                if (!(prevHolder.relativeLayout.getVisibility() == View.GONE && prevHolderPos > 0))
+                    break;
                 prevHolderPos--;
                 prevHolder = (ViewHolder) mRecyclerView.findViewHolderForAdapterPosition(prevHolderPos);
             }
@@ -278,12 +358,16 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
             MessageObject prevMessage = messageList.get(prevHolderPos);
 
             if (nextMessage.isInfo() && prevMessage.isInfo()) {
+                assert prevHolder != null;
                 prevHolder.relativeLayout.setVisibility(View.GONE);
             } else if (nextMessage.isInfo() || nextMessage.getSenderId().equals(userKey) || numberOfUsers == 1) {
+                assert nextHolder != null;
                 nextHolder.messageSender.setVisibility(View.GONE);
             } else if (prevMessage.isInfo() || !prevMessage.getSenderId().equals(nextMessage.getSenderId())) {
+                assert nextHolder != null;
                 nextHolder.messageSender.setVisibility(View.VISIBLE);
             } else {
+                assert nextHolder != null;
                 nextHolder.messageSender.setVisibility(View.GONE);
             }
         }
@@ -306,23 +390,40 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         return position;
     }
 
+
+    public interface OnItemDoubleClickListener {
+        void OnItemDoubleClicked(int position);
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
-        TextView    messageText,
-                    messageSender,
-                messageTime;
-        ImageView mediaImage;
+        TextView messageText,
+                messageSender,
+                messageTime,
+                taggedText,
+                taggedSender;
+
+        ImageView mediaImage,
+                taggedImage;
 
         RelativeLayout relativeLayout;
+
+        RelativeLayout taggedLayout;
 
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            messageSender=itemView.findViewById(R.id.messageSender);
-            messageText=itemView.findViewById(R.id.messageText);
-            messageTime=itemView.findViewById(R.id.messageTime);
-            mediaImage=itemView.findViewById(R.id.mediaImage);
-            relativeLayout=itemView.findViewById(R.id.parentRelativeLayout);
+            messageSender = itemView.findViewById(R.id.messageSender);
+            messageText = itemView.findViewById(R.id.messageText);
+            messageTime = itemView.findViewById(R.id.messageTime);
+            mediaImage = itemView.findViewById(R.id.mediaImage);
+
+            taggedText = itemView.findViewById(R.id.messageTaggedText);
+            taggedSender = itemView.findViewById(R.id.messageTaggedSender);
+            taggedImage = itemView.findViewById(R.id.messageTaggedImage);
+            taggedLayout = itemView.findViewById(R.id.messageTaggedLayout);
+
+            relativeLayout = itemView.findViewById(R.id.parentRelativeLayout);
         }
     }
 }

@@ -9,14 +9,20 @@ public class MessageObject {
             text,
             imageUri,
             senderId,
+            senderPhone,
             senderName,
             time,
-            date;
+            date,
+            taggedId,
+            taggedSender,
+            taggedText,
+            taggedImageUri;
 
     long timeStamp;
 
     boolean isInfo,
-            isDeletedForEveryone;
+            isDeletedForEveryone,
+            isTagged;
 
 
     public MessageObject(String messageId) {
@@ -33,17 +39,38 @@ public class MessageObject {
         date = null;
     }
 
-    public MessageObject(String messageId, String text, String imageUri, String senderId, String senderName, String time, String date, long timeStamp, boolean isInfo, boolean isDeletedForEveryone) {
+    public MessageObject(String messageId, String text, String imageUri, String senderId, String senderPhone, String senderName, String time, String date, long timeStamp, boolean isInfo, boolean isDeletedForEveryone) {
         this.messageId = messageId;
         this.text = text;
         this.imageUri = imageUri;
         this.senderId = senderId;
+        this.senderPhone = senderPhone;
         this.senderName = senderName;
         this.time = time;
         this.date = date;
         this.timeStamp = timeStamp;
         this.isInfo = isInfo;
         this.isDeletedForEveryone = isDeletedForEveryone;
+    }
+
+    public MessageObject(String messageId, String text, String imageUri, String senderId, String senderPhone, String senderName, String time, String date, long timeStamp, boolean isInfo, boolean isDeletedForEveryone, boolean isTagged, String taggedId, String taggedSender, String taggedText, String taggedImageUri) {
+        this.messageId = messageId;
+        this.text = text;
+        this.imageUri = imageUri;
+        this.senderId = senderId;
+        this.senderPhone = senderPhone;
+        this.senderName = senderName;
+        this.time = time;
+        this.date = date;
+        this.timeStamp = timeStamp;
+        this.isInfo = isInfo;
+        this.isDeletedForEveryone = isDeletedForEveryone;
+
+        this.isTagged = isTagged;
+        this.taggedId = taggedId;
+        this.taggedSender = taggedSender;
+        this.taggedText = taggedText;
+        this.taggedImageUri = taggedImageUri;
     }
 
     public String getSenderName() {
@@ -64,6 +91,10 @@ public class MessageObject {
 
     public String getSenderId() {
         return senderId;
+    }
+
+    public String getSenderPhone() {
+        return senderPhone;
     }
 
     public String getDate() {
@@ -98,6 +129,30 @@ public class MessageObject {
         return timeStamp;
     }
 
+    public String getTaggedId() {
+        return taggedId;
+    }
+
+    public String getTaggedSender() {
+        return taggedSender;
+    }
+
+    public String getTaggedText() {
+        return taggedText;
+    }
+
+    public String getTaggedImageUri() {
+        return taggedImageUri;
+    }
+
+    public boolean isTagged() {
+        return isTagged;
+    }
+
+    public void setTagged(boolean tagged) {
+        isTagged = tagged;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -110,4 +165,5 @@ public class MessageObject {
     public int hashCode() {
         return Objects.hash(messageId);
     }
+
 }

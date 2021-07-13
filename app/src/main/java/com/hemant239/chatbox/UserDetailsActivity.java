@@ -16,7 +16,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -74,13 +73,10 @@ public class UserDetailsActivity extends AppCompatActivity {
         if(!userImage.equals("")) {
             mUserImage.setClipToOutline(true);
             Glide.with(this).load(Uri.parse(userImage)).into(mUserImage);
-            mUserImage.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(getApplicationContext(), ImageViewActivity.class);
-                    intent.putExtra("URI", userImage);
-                    startActivity(intent);
-                }
+            mUserImage.setOnClickListener(v -> {
+                Intent intent = new Intent(getApplicationContext(), ImageViewActivity.class);
+                intent.putExtra("URI", userImage);
+                startActivity(intent);
             });
         }
 
@@ -92,19 +88,9 @@ public class UserDetailsActivity extends AppCompatActivity {
             mChangeStatus.setVisibility(View.VISIBLE);
             mChangePhoto.setVisibility(View.VISIBLE);
 
-            mChangePhoto.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    openGallery();
-                }
-            });
+            mChangePhoto.setOnClickListener(v -> openGallery());
 
-            mChangeStatus.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    changeStatus();
-                }
-            });
+            mChangeStatus.setOnClickListener(v -> changeStatus());
 
         }
     }
@@ -145,22 +131,13 @@ public class UserDetailsActivity extends AppCompatActivity {
                     intent.putExtra("message", "Your Image is being uploaded \\n please wait");
                     intent.putExtra("isNewUser", false);
                     startActivityForResult(intent, CANCEL_UPLOAD_TASK);
-                    uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                            profileStorage.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                @Override
-                                public void onSuccess(Uri uri) {
-                                    changeProfilePhoto(uri);
-                                    mUserDb.child("Profile Image Uri").setValue(uri.toString());
-                                    AllChatsActivity.curUser.setProfileImageUri(uri.toString());
-                                    Glide.with(getApplicationContext()).load(uri).into(mUserImage);
-                                    ((LoadingActivity) LoadingActivity.context).finish();
-                                }
-                            });
-
-                        }
-                    });
+                    uploadTask.addOnSuccessListener(taskSnapshot -> profileStorage.getDownloadUrl().addOnSuccessListener(uri -> {
+                        changeProfilePhoto(uri);
+                        mUserDb.child("Profile Image Uri").setValue(uri.toString());
+                        AllChatsActivity.curUser.setProfileImageUri(uri.toString());
+                        Glide.with(getApplicationContext()).load(uri).into(mUserImage);
+                        ((LoadingActivity) LoadingActivity.context).finish();
+                    }));
 
                     break;
 

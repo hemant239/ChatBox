@@ -4,14 +4,14 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public class ChatObject implements Serializable {
-    private String uid,
-            name,
-            imageUri,
-            lastMessageText,
-            lastMessageSender,
-            lastSenderId,
-            lastMessageTime,
-            lastMessageId;
+    private final String uid;
+    private final String lastSenderId;
+    private String name;
+    private String imageUri;
+    private String lastMessageText;
+    private String lastMessageSender;
+    private String lastMessageTime;
+    private String lastMessageId;
 
     private int numberOfUsers;
 

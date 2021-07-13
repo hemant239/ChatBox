@@ -10,10 +10,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseException;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
@@ -52,25 +49,21 @@ public class LogInActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mAuth=FirebaseAuth.getInstance();
+        mAuth = FirebaseAuth.getInstance();
         userLoggedIn();
         setContentView(R.layout.activity_login);
 
         initializeViews();
 
-        mSend.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(mVerificationId!=null){
-                    verifyPhoneNumberWithCode();
-                }
-                else{
-                    startPhoneNumberVerification();
-                }
+        mSend.setOnClickListener(v -> {
+            if (mVerificationId != null) {
+                verifyPhoneNumberWithCode();
+            } else {
+                startPhoneNumberVerification();
             }
         });
 
-        mCallbacks= new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+        mCallbacks = new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
             @Override
             public void onVerificationCompleted(@NonNull PhoneAuthCredential phoneAuthCredential) {
                 signInWithPhoneAuthCredential(phoneAuthCredential);
@@ -78,7 +71,7 @@ public class LogInActivity extends AppCompatActivity {
 
             @Override
             public void onVerificationFailed(@NonNull FirebaseException e) {
-                Toast.makeText(getApplicationContext(),"On verification Failed",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "On verification Failed", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -99,34 +92,31 @@ public class LogInActivity extends AppCompatActivity {
     }
 
     private void signInWithPhoneAuthCredential(PhoneAuthCredential phoneAuthCredential) {
-        mAuth.signInWithCredential(phoneAuthCredential).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-            @Override
-            public void onComplete(@NonNull Task<AuthResult> task) {
-                if(task.isSuccessful()){
-                    final FirebaseUser mUser=FirebaseAuth.getInstance().getCurrentUser();
-                    if(mUser!=null){
-                        final DatabaseReference mUserDB= FirebaseDatabase.getInstance().getReference().child("Users").child(mUser.getUid());
-                        mUserDB.addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                if(!snapshot.exists()) {
-                                    Intent intent = new Intent(getApplicationContext(), NewUserDetailsActivity.class);
-                                    intent.putExtra("phoneNumber", mPhoneNumber.getText().toString());
-                                    startActivity(intent);
-                                    finish();
-                                }
-                                else{
-                                    userLoggedIn();
-                                }
+        mAuth.signInWithCredential(phoneAuthCredential).addOnCompleteListener(this, task -> {
+            if (task.isSuccessful()) {
+                final FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
+                if (mUser != null) {
+                    final DatabaseReference mUserDB = FirebaseDatabase.getInstance().getReference().child("Users").child(mUser.getUid());
+                    mUserDB.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            if (!snapshot.exists()) {
+                                Intent intent = new Intent(getApplicationContext(), NewUserDetailsActivity.class);
+                                intent.putExtra("phoneNumber", mPhoneNumber.getText().toString());
+                                startActivity(intent);
+                                finish();
+                            } else {
+                                userLoggedIn();
                             }
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError error) {
-                                Toast.makeText(getApplicationContext(),"On Cancelled",Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    }
+                        }
 
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                            Toast.makeText(getApplicationContext(), "On Cancelled", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }
+
             }
         });
     }
@@ -144,21 +134,28 @@ public class LogInActivity extends AppCompatActivity {
                 fileInputStream.close();
 
 
-                Intent intent = new Intent(getApplicationContext(), AllChatsActivity.class);
-                intent.putExtra("First time", false);
-                intent.putExtra("curUser", userObject);
-                startActivity(intent);
-                finish();
+                if (mUser.getUid().equals(userObject.getUid())) {
+                    Intent intent = new Intent(getApplicationContext(), AllChatsActivity.class);
+                    intent.putExtra("First time", false);
+                    intent.putExtra("curUser", userObject);
+                    startActivity(intent);
+                    finish();
+                }
+                //if the user logs in with another number
+                else {
+                    getUserDetails(mUser.getUid(), false);
+                }
+
 
             } catch (IOException | ClassNotFoundException e) {
-                getUserDetails(mUser.getUid());
+                getUserDetails(mUser.getUid(), true);
                 e.printStackTrace();
             }
 
         }
     }
 
-    private void getUserDetails(final String userKey) {
+    private void getUserDetails(final String userKey, boolean firstTime) {
         FirebaseDatabase.getInstance().getReference().child("Users").child(userKey).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -168,6 +165,7 @@ public class LogInActivity extends AppCompatActivity {
                     String userImage = "";
                     String userStatus = "";
                     String chatID = "";
+                    String notificationKey = "";
 
                     if (snapshot.child("Name").getValue() != null) {
                         userName = Objects.requireNonNull(snapshot.child("Name").getValue()).toString();
@@ -181,12 +179,16 @@ public class LogInActivity extends AppCompatActivity {
                     if (snapshot.child("Status").getValue() != null) {
                         userStatus = Objects.requireNonNull(snapshot.child("Status").getValue()).toString();
                     }
+                    if (snapshot.child("notificationKey").getValue() != null) {
+                        notificationKey = Objects.requireNonNull(snapshot.child("notificationKey").getValue()).toString();
+                    }
 
 
-                    UserObject userObject = new UserObject(userKey, userName, userPhone, userStatus, userImage, chatID);
+                    UserObject userObject = new UserObject(userKey, userName, userPhone, userStatus, userImage, chatID, notificationKey);
                     Intent intent = new Intent(getApplicationContext(), AllChatsActivity.class);
-                    intent.putExtra("First time", true);
+                    intent.putExtra("First time", firstTime);
                     intent.putExtra("curUser", userObject);
+                    intent.putExtra("userChanged", true);
                     startActivity(intent);
                     finish();
                 }

@@ -41,7 +41,7 @@
             android:layout_width="50sp"
             android:layout_height="50sp"
             android:layout_gravity="center"
-            android:layout_marginLeft="5dp"
+            android:layout_marginStart="5dp"
             android:background="@drawable/ic_baseline_person_24" />
 
         <LinearLayout
@@ -76,7 +76,7 @@
             android:layout_width="50sp"
             android:layout_height="50sp"
             android:layout_gravity="center"
-            android:layout_marginLeft="5dp"
+            android:layout_marginStart="5dp"
             android:background="@drawable/ic_baseline_local_phone_24" />
 
         <LinearLayout
@@ -111,7 +111,7 @@
             android:layout_width="50sp"
             android:layout_height="50sp"
             android:layout_gravity="center"
-            android:layout_marginLeft="5dp"
+            android:layout_marginStart="5dp"
             android:background="@drawable/ic_baseline_info_24" />
 
         <LinearLayout

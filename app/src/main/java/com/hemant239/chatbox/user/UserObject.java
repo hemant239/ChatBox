@@ -4,12 +4,13 @@ import java.io.Serializable;
 
 public class UserObject implements Serializable {
 
-    private String uid,
-            name,
-            phoneNumber,
-            status,
-            profileImageUri,
-            chatID;
+    private final String uid;
+    private final String phoneNumber;
+    private String name;
+    private String status;
+    private String profileImageUri;
+    private String chatID;
+    private String notificationKey;
 
     private boolean isSelected = false;
 
@@ -31,13 +32,13 @@ public class UserObject implements Serializable {
         this.chatID = chatID;
     }
 
-    public UserObject(String uid, String name, String phoneNumber, String status, String chatID) {
+    public UserObject(String uid, String name, String phoneNumber, String status, String notificationKey) {
         this.uid = uid;
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.status = status;
         this.profileImageUri = "";
-        this.chatID = chatID;
+        this.notificationKey = notificationKey;
     }
 
     public UserObject(String uid, String name, String phoneNumber, String status, String profileImageUri, String chatID) {
@@ -49,8 +50,15 @@ public class UserObject implements Serializable {
         this.chatID = chatID;
     }
 
-
-
+    public UserObject(String uid, String name, String phoneNumber, String status, String profileImageUri, String chatID, String notificationKey) {
+        this.uid = uid;
+        this.name = name;
+        this.phoneNumber = phoneNumber;
+        this.status = status;
+        this.profileImageUri = profileImageUri;
+        this.chatID = chatID;
+        this.notificationKey = notificationKey;
+    }
 
     public String getUid() {
         return uid;
@@ -74,6 +82,10 @@ public class UserObject implements Serializable {
 
     public String getChatID() {
         return chatID;
+    }
+
+    public String getNotificationKey() {
+        return notificationKey;
     }
 
     public void setName(String name) {

@@ -65,22 +65,16 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
         } else {
             holder.mChatImage.setImageResource(R.drawable.ic_baseline_person_24);
         }
-        holder.mChatImage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent =new Intent(context, ImageViewActivity.class);
-                intent.putExtra("URI",chatObject.getImageUri());
-                context.startActivity(intent);
-            }
+        holder.mChatImage.setOnClickListener(v -> {
+            Intent intent = new Intent(context, ImageViewActivity.class);
+            intent.putExtra("URI", chatObject.getImageUri());
+            context.startActivity(intent);
         });
 
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent=new Intent(context,SpecificChatActivity.class);
-                intent.putExtra("chatObject",chatObject);
-                context.startActivity(intent);
-            }
+        holder.itemView.setOnClickListener(v -> {
+            Intent intent = new Intent(context, SpecificChatActivity.class);
+            intent.putExtra("chatObject", chatObject);
+            context.startActivity(intent);
         });
 
 

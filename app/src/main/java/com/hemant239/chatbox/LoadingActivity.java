@@ -22,22 +22,19 @@ public class LoadingActivity extends AppCompatActivity {
         setContentView(R.layout.activity_loading);
         initializeViews();
 
-        String text=getIntent().getStringExtra("message");
-        isNewUser=getIntent().getBooleanExtra("isNewUser",false);
+        String text = getIntent().getStringExtra("message");
+        isNewUser = getIntent().getBooleanExtra("isNewUser", false);
         displayText.setText(text);
 
-        if(isNewUser){
+        if (isNewUser) {
             mCancelUpload.setVisibility(View.GONE);
         }
 
 
-        context=this;
-        mCancelUpload.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setResult(RESULT_OK);
-                finish();
-            }
+        context = this;
+        mCancelUpload.setOnClickListener(v -> {
+            setResult(RESULT_OK);
+            finish();
         });
 
     }

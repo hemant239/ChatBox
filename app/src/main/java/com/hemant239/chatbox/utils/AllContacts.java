@@ -1,4 +1,4 @@
-package com.hemant239.chatbox;
+package com.hemant239.chatbox.utils;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -13,8 +13,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.hemant239.chatbox.AllChatsActivity;
 import com.hemant239.chatbox.user.UserObject;
-import com.hemant239.chatbox.utils.CountryToPhonePrefix;
 
 import java.util.HashMap;
 import java.util.Objects;
@@ -84,8 +84,9 @@ public class AllContacts {
                 if (snapshot.exists()) {
                     for (DataSnapshot childSnapshot : snapshot.getChildren()) {
                         String userImage = "";
-                        String userKey = "";
+                        String userKey;
                         userKey = childSnapshot.getKey();
+
                         if (childSnapshot.child("Profile Image Uri").getValue() != null) {
                             userImage = Objects.requireNonNull(childSnapshot.child("Profile Image Uri").getValue()).toString();
                         }
@@ -137,8 +138,10 @@ public class AllContacts {
         mChatInfo.put("ID", chatKey);
         mChatInfo.put("isSingleChat", true);
         mChatInfo.put("Number Of Users", 1);
-        mChatInfo.put("user/" + curUserKey, true);
-        mChatInfo.put("user/" + userKey, true);
+        mChatInfo.put("user/" + curUserKey + "/notificationKey", true);
+        mChatInfo.put("user/" + userKey + "/notificationKey", true);
+        mChatInfo.put("user/" + userKey + "/lastMessageId", true);
+        mChatInfo.put("user/" + curUserKey + "/lastMessageId", true);
         mChatInfo.put(userKey + "/Name", AllChatsActivity.curUser.getPhoneNumber());
         mChatInfo.put(curUserKey + "/Name", phoneNumber);
         mChatInfo.put(userKey + "/Chat Profile Image Uri", AllChatsActivity.curUser.getProfileImageUri());

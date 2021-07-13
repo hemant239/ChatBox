@@ -1,6 +1,7 @@
 package com.hemant239.chatbox;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -27,6 +28,11 @@ import com.google.firebase.database.ValueEventListener;
 import com.hemant239.chatbox.chat.ChatAdapter;
 import com.hemant239.chatbox.chat.ChatObject;
 import com.hemant239.chatbox.user.UserObject;
+import com.hemant239.chatbox.utils.AllContacts;
+import com.onesignal.OneSignal;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -51,10 +57,12 @@ public class AllChatsActivity extends AppCompatActivity {
     ArrayList<ChatObject> chatList;
 
     public static UserObject curUser;
-    static HashMap<String, UserObject> allContacts;
+    public static HashMap<String, UserObject> allContacts;
+    @SuppressLint("StaticFieldLeak")
     public static Context context;
     String curDate;
     DatabaseReference mUserDB;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,9 +72,12 @@ public class AllChatsActivity extends AppCompatActivity {
         curUser = new UserObject();
         curUser = (UserObject) getIntent().getSerializableExtra("curUser");
 
+        boolean firstTime = getIntent().getBooleanExtra("First time", false);
+        boolean userChanged = getIntent().getBooleanExtra("userChanged", false);
+
 
         allContacts = new HashMap<>();
-        if (getIntent().getBooleanExtra("First time", false)) {
+        if (firstTime) {
             requestUserPermission();
         } else {
             File contactsFile = new File(context.getFilesDir(), "contacts.ser");
@@ -88,6 +99,17 @@ public class AllChatsActivity extends AppCompatActivity {
         }
 
 
+        if (firstTime || userChanged) {
+            OneSignal.disablePush(false);
+            setExternalOSId();
+            String notificationKey = Objects.requireNonNull(OneSignal.getDeviceState()).getUserId();
+            FirebaseDatabase.getInstance().getReference().child("Users/" + curUser.getUid() + "/notificationKey").setValue(notificationKey);
+        }
+
+
+        new NotificationServiceExtension();
+
+
         Date date = Calendar.getInstance().getTime();
         SimpleDateFormat simpleDateFormatDate = new SimpleDateFormat("EEE, MMM dd, yyyy");
         curDate = simpleDateFormatDate.format(date).toUpperCase();
@@ -97,6 +119,7 @@ public class AllChatsActivity extends AppCompatActivity {
         initializeRecyclerViews();
         getChatList();
     }
+
 
 
     @Override
@@ -256,10 +279,10 @@ public class AllChatsActivity extends AppCompatActivity {
                 });
 
                 final boolean finalIsSingleChat = isSingleChat;
-                chatDb.child("info/user/" + curUserKey).addValueEventListener(new ValueEventListener() {
+                chatDb.child("info/user/" + curUserKey + "/lastMessageId").addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot lastMessageSnapshot) {
-                        if (lastMessageSnapshot.exists() && !lastMessageSnapshot.getValue().toString().equals("true")) {
+                        if (lastMessageSnapshot.exists() && !Objects.requireNonNull(lastMessageSnapshot.getValue()).toString().equals("true")) {
                             String lastMessageId = Objects.requireNonNull(lastMessageSnapshot.getValue()).toString();
                             getMessageData(key, name[0], imageUri[0], numberOfUsers[0], finalIsSingleChat, lastMessageId);
                         } else {
@@ -326,7 +349,7 @@ public class AllChatsActivity extends AppCompatActivity {
                     }
 
                     if (snapshot.child("Deleted For Everyone").getValue() != null) {
-                        if (snapshot.child("Deleted For Everyone").getValue().toString().equals(curUser.getUid())) {
+                        if (Objects.requireNonNull(snapshot.child("Deleted For Everyone").getValue()).toString().equals(curUser.getUid())) {
                             lastMessageText = "You Deleted this Message";
                         } else {
                             lastMessageText = "This Message was Deleted";
@@ -342,7 +365,7 @@ public class AllChatsActivity extends AppCompatActivity {
                                 ChatObject chatObject = new ChatObject(key);
                                 int indexOfChat = chatList.indexOf(chatObject);
                                 String deletedText = "This Message Was Deleted";
-                                if (snapshot.getValue().toString().equals(AllChatsActivity.curUser.getUid())) {
+                                if (Objects.requireNonNull(snapshot.getValue()).toString().equals(AllChatsActivity.curUser.getUid())) {
                                     deletedText = "You Deleted This Message";
                                 }
                                 if (indexOfChat > -1 && lastMessageId.equals(chatList.get(indexOfChat).getLastMessageId())) {
@@ -418,22 +441,74 @@ public class AllChatsActivity extends AppCompatActivity {
         intent.putExtra("isSingleChatActivity", true);
         startActivity(intent);
     }
+
     private void logOut() {
         FirebaseAuth.getInstance().signOut();
-        Intent intent=new Intent(this,LogInActivity.class);
+        OneSignal.disablePush(true);
+        removeExternalIds();
+        Intent intent = new Intent(this, LogInActivity.class);
         startActivity(intent);
         finish();
     }
 
+
+    private void setExternalOSId() {
+        OneSignal.setExternalUserId(curUser.getUid(), new OneSignal.OSExternalUserIdUpdateCompletionHandler() {
+            @Override
+            public void onSuccess(JSONObject results) {
+                OneSignal.onesignalLog(OneSignal.LOG_LEVEL.VERBOSE, "Set external user id done with results: " + results.toString());
+                try {
+                    if (results.has("push") && results.getJSONObject("push").has("success")) {
+                        boolean isPushSuccess = results.getJSONObject("push").getBoolean("success");
+                        OneSignal.onesignalLog(OneSignal.LOG_LEVEL.VERBOSE, "Set external user id for push status: " + isPushSuccess);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+
+            @Override
+            public void onFailure(OneSignal.ExternalIdError error) {
+                OneSignal.onesignalLog(OneSignal.LOG_LEVEL.VERBOSE, "Set external user id done with error: " + error.toString());
+            }
+        });
+    }
+
+    private void removeExternalIds() {
+        OneSignal.removeExternalUserId(new OneSignal.OSExternalUserIdUpdateCompletionHandler() {
+            @Override
+            public void onSuccess(JSONObject results) {
+                OneSignal.onesignalLog(OneSignal.LOG_LEVEL.VERBOSE, "Set external user id done with results: " + results.toString());
+                try {
+                    if (results.has("push") && results.getJSONObject("push").has("success")) {
+                        boolean isPushSuccess = results.getJSONObject("push").getBoolean("success");
+                        OneSignal.onesignalLog(OneSignal.LOG_LEVEL.VERBOSE, "Set external user id for push status: " + isPushSuccess);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+
+            @Override
+            public void onFailure(OneSignal.ExternalIdError error) {
+                OneSignal.onesignalLog(OneSignal.LOG_LEVEL.VERBOSE, "Set external user id done with error: " + error.toString());
+            }
+        });
+    }
+
+
     private void initializeViews() {
     }
+
     private void initializeRecyclerViews() {
 
-        mChatList=findViewById(R.id.recyclerViewListChats);
+        mChatList = findViewById(R.id.recyclerViewListChats);
         mChatList.setHasFixedSize(false);
         mChatList.setNestedScrollingEnabled(false);
 
-        mChatList.addItemDecoration(new DividerItemDecoration(mChatList.getContext(),DividerItemDecoration.VERTICAL));
+        mChatList.addItemDecoration(new DividerItemDecoration(mChatList.getContext(), DividerItemDecoration.VERTICAL));
 
 
         mChatListAdapter = new ChatAdapter(chatList, this);
@@ -479,6 +554,4 @@ public class AllChatsActivity extends AppCompatActivity {
         }
         return true;
     }
-
-
 }

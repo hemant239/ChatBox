@@ -2,15 +2,12 @@ package com.hemant239.chatbox;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -19,8 +16,6 @@ import com.google.firebase.database.ValueEventListener;
 import com.hemant239.chatbox.chat.ChatObject;
 import com.hemant239.chatbox.user.UserObject;
 
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -58,12 +53,7 @@ public class CreateSingleChatActivity extends AppCompatActivity {
         chatID = user.getChatID();
 
 
-        mCancelButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        mCancelButton.setOnClickListener(v -> finish());
 
 
         if (!chatID.equals("")) {
@@ -100,12 +90,9 @@ public class CreateSingleChatActivity extends AppCompatActivity {
         HashMap<String, Object> mUserInfo = new HashMap<>();
 
 
-        Date date = Calendar.getInstance().getTime();
-
         mUserInfo.put(userKey + "/Single chats/" + curUser.getUid(), key);
         mUserInfo.put(curUser.getUid() + "/Single chats/" + userKey, key);
-//        mUserInfo.put(curUser.getUid()+"/chat/"+key,-date.getTime());
-//        mUserInfo.put(userKey+"/chat/"+key,-date.getTime());
+
 
         FirebaseDatabase.getInstance().getReference().child("Users").updateChildren(mUserInfo);
 
@@ -114,8 +101,10 @@ public class CreateSingleChatActivity extends AppCompatActivity {
         mChatInfo.put("ID", key);
         mChatInfo.put("isSingleChat", true);
         mChatInfo.put("Number Of Users", 1);
-        mChatInfo.put("user/" + curUser.getUid(), true);
-        mChatInfo.put("user/" + userKey, true);
+        mChatInfo.put("user/" + curUser.getUid() + "/notificationKey", true);
+        mChatInfo.put("user/" + userKey + "/notificationKey", true);
+        mChatInfo.put("user/" + curUser.getUid() + "/lastMessageId", true);
+        mChatInfo.put("user/" + userKey + "/lastMessageId", true);
         mChatInfo.put(userKey + "/Name", curUser.getPhoneNumber());
         mChatInfo.put(curUser.getUid() + "/Name", userPhone);
         mChatInfo.put(userKey + "/Chat Profile Image Uri", curUser.getProfileImageUri());
@@ -123,15 +112,12 @@ public class CreateSingleChatActivity extends AppCompatActivity {
 
 
         assert key != null;
-        mChatDb.child(key).child("info").updateChildren(mChatInfo).addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()) {
-                    openChat(key);
-                } else {
-                    Toast.makeText(getApplicationContext(),"chat loading failed",Toast.LENGTH_SHORT).show();
-                    finish();
-                }
+        mChatDb.child(key).child("info").updateChildren(mChatInfo).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                openChat(key);
+            } else {
+                Toast.makeText(getApplicationContext(), "chat loading failed", Toast.LENGTH_SHORT).show();
+                finish();
             }
         });
     }

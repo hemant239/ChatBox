@@ -40,7 +40,7 @@
             android:layout_height="match_parent"
             android:text="Hello This"
             android:id="@+id/chatAppName"
-            android:textSize="30dp"
+            android:textSize="30sp"
             android:layout_margin="5dp"/>
 
     </LinearLayout>

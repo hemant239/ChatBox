@@ -7,7 +7,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -71,45 +70,29 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
             holder.mProfilePhoto.setClipToOutline(true);
             Glide.with(context).load(Uri.parse(user.getProfileImageUri())).into(holder.mProfilePhoto);
         }
-        holder.mProfilePhoto.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(context, ImageViewActivity.class);
-                intent.putExtra("URI", user.getProfileImageUri());
-                context.startActivity(intent);
-            }
+        holder.mProfilePhoto.setOnClickListener(v -> {
+            Intent intent = new Intent(context, ImageViewActivity.class);
+            intent.putExtra("URI", user.getProfileImageUri());
+            context.startActivity(intent);
         });
 
-        if(isSingleChatActivity) {
+        if (isSingleChatActivity) {
             holder.isSelected.setVisibility(View.GONE);
-            holder.itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent=new Intent(context, CreateSingleChatActivity.class);
-                    intent.putExtra("userObject",user);
-                    context.startActivity(intent);
-                }
+            holder.itemView.setOnClickListener(v -> {
+                Intent intent = new Intent(context, CreateSingleChatActivity.class);
+                intent.putExtra("userObject", user);
+                context.startActivity(intent);
             });
 
-        }
-        else if(isGroupDetailsActivity){
+        } else if (isGroupDetailsActivity) {
             holder.isSelected.setVisibility(View.GONE);
-            holder.itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent=new Intent(context, UserDetailsActivity.class);
-                    intent.putExtra("userObject",user);
-                    context.startActivity(intent);
-                }
+            holder.itemView.setOnClickListener(v -> {
+                Intent intent = new Intent(context, UserDetailsActivity.class);
+                intent.putExtra("userObject", user);
+                context.startActivity(intent);
             });
-        }
-        else{
-            holder.isSelected.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    user.setSelected(isChecked);
-                }
-            });
+        } else {
+            holder.isSelected.setOnCheckedChangeListener((buttonView, isChecked) -> user.setSelected(isChecked));
         }
 
     }

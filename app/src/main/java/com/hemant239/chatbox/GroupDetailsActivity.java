@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -64,13 +63,10 @@ public class GroupDetailsActivity extends AppCompatActivity {
             mGroupImage.setClipToOutline(true);
             Glide.with(this).load(Uri.parse(image)).into(mGroupImage);
 
-            mGroupImage.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(getApplicationContext(), ImageViewActivity.class);
-                    intent.putExtra("URI", image);
-                    startActivity(intent);
-                }
+            mGroupImage.setOnClickListener(v -> {
+                Intent intent = new Intent(getApplicationContext(), ImageViewActivity.class);
+                intent.putExtra("URI", image);
+                startActivity(intent);
             });
         }
 
@@ -103,7 +99,8 @@ public class GroupDetailsActivity extends AppCompatActivity {
                         phone = "",
                         imageUri = "",
                         status = "",
-                        chatID = "";
+                        chatID = "",
+                        notificationKey = "";
                 if(snapshot.exists()) {
                     if (snapshot.child("Name").getValue() != null) {
                         name = Objects.requireNonNull(snapshot.child("Name").getValue()).toString();
@@ -117,6 +114,9 @@ public class GroupDetailsActivity extends AppCompatActivity {
                     if (snapshot.child("Status").getValue() != null) {
                         status = Objects.requireNonNull(snapshot.child("Status").getValue()).toString();
                     }
+                    if (snapshot.child("notificationKey").getValue() != null) {
+                        notificationKey = Objects.requireNonNull(snapshot.child("notificationKey").getValue()).toString();
+                    }
 
                     name = phone;
                     if (AllChatsActivity.allContacts.get(phone) != null) {
@@ -124,7 +124,7 @@ public class GroupDetailsActivity extends AppCompatActivity {
                         chatID = Objects.requireNonNull(AllChatsActivity.allContacts.get(phone)).getChatID();
                     }
 
-                    UserObject userObject = new UserObject(userKey, name, phone, status, imageUri, chatID);
+                    UserObject userObject = new UserObject(userKey, name, phone, status, imageUri, chatID, notificationKey);
                     userList.add(userObject);
                     mUserListAdapter.notifyItemInserted(userList.size() - 1);
                 }
